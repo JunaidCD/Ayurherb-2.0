@@ -100,8 +100,8 @@ export const api = {
           id: '1',
           username: credentials.username,
           role: credentials.role,
-          name: 'John Doe',
-          email: 'john@ayurherb.com'
+          name: 'Junaid',
+          email: 'junaid@ayurherb.com'
         },
         token: 'mock-jwt-token'
       };
