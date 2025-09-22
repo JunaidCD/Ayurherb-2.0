@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Search, Filter, ChevronDown, Eye, Edit, Trash2 } from 'lucide-react';
+import { 
+  Search, Filter, ChevronDown, Eye, Edit, Trash2, ArrowUpDown,
+  ArrowUp, ArrowDown, MoreHorizontal, Calendar, MapPin, User, Package
+} from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 const DataTable = ({ 
@@ -53,13 +56,22 @@ const DataTable = ({
     }
   };
 
-  const renderCellValue = (value, column) => {
+  const renderCellValue = (value, column, row) => {
+    if (column.render) {
+      return column.render(value, row);
+    }
+    
     if (column.type === 'status') {
       return <StatusBadge status={value} />;
     }
     
     if (column.type === 'date') {
-      return new Date(value).toLocaleDateString();
+      return (
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-gray-400" />
+          <span>{new Date(value).toLocaleDateString()}</span>
+        </div>
+      );
     }
     
     if (column.type === 'number') {
@@ -85,145 +97,172 @@ const DataTable = ({
   }
 
   return (
-    <div className="bg-dark-800 rounded-xl border border-dark-700 overflow-hidden">
-      {/* Header with search and filters */}
-      {(searchable || filterable) && (
-        <div className="p-4 border-b border-dark-700 flex flex-wrap gap-4">
-          {searchable && (
-            <div className="flex-1 min-w-64">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
-          )}
-          
-          {filterable && (
-            <div className="flex gap-2">
-              <select
-                value={filterColumn}
-                onChange={(e) => setFilterColumn(e.target.value)}
-                className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="">Filter by...</option>
-                {columns.map(col => (
-                  <option key={col.key} value={col.key}>{col.label}</option>
-                ))}
-              </select>
-              
-              {filterColumn && (
-                <input
-                  type="text"
-                  placeholder="Filter value..."
-                  value={filterValue}
-                  onChange={(e) => setFilterValue(e.target.value)}
-                  className="px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Table */}
+    <div className="overflow-hidden">
+      {/* Modern Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-dark-700">
-            <tr>
+          {/* Enhanced Header */}
+          <thead>
+            <tr className="border-b border-white/10">
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className={`px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer hover:text-white' : ''
+                  className={`px-6 py-4 text-left text-sm font-semibold text-gray-300 ${
+                    column.sortable ? 'cursor-pointer hover:text-white group' : ''
                   }`}
                   onClick={() => column.sortable && handleSort(column.key)}
                 >
                   <div className="flex items-center gap-2">
-                    {column.label}
+                    {column.header}
                     {column.sortable && (
-                      <ChevronDown 
-                        className={`w-4 h-4 transition-transform ${
-                          sortColumn === column.key && sortDirection === 'desc' ? 'rotate-180' : ''
-                        }`} 
-                      />
+                      <div className="flex flex-col">
+                        {sortColumn === column.key ? (
+                          sortDirection === 'asc' ? (
+                            <ArrowUp className="w-4 h-4 text-primary-400" />
+                          ) : (
+                            <ArrowDown className="w-4 h-4 text-primary-400" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="w-4 h-4 text-gray-500 group-hover:text-gray-300 transition-colors" />
+                        )}
+                      </div>
                     )}
                   </div>
                 </th>
               ))}
-              {(onView || onEdit || onDelete) && (
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
-              )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-dark-700">
+          
+          {/* Enhanced Body */}
+          <tbody>
             {sortedData.map((row, index) => (
               <tr
                 key={row.id || index}
-                className={`hover:bg-dark-700/50 transition-colors ${
+                className={`group border-b border-white/5 hover:bg-white/5 transition-all duration-200 ${
                   onRowClick ? 'cursor-pointer' : ''
                 }`}
                 onClick={() => onRowClick && onRowClick(row)}
               >
                 {columns.map((column) => (
-                  <td key={column.key} className="px-4 py-3 text-sm text-gray-300">
-                    {renderCellValue(row[column.key], column)}
-                  </td>
-                ))}
-                {(onView || onEdit || onDelete) && (
-                  <td className="px-4 py-3 text-sm">
-                    <div className="flex items-center gap-2">
-                      {onView && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onView(row);
-                          }}
-                          className="p-1 text-gray-400 hover:text-primary-400 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
+                  <td key={column.key} className="px-6 py-4">
+                    <div className="flex items-center">
+                      {column.key === 'id' && (
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary-500/20 to-emerald-500/20 rounded-lg flex items-center justify-center border border-primary-500/30">
+                            <Package className="w-5 h-5 text-primary-400" />
+                          </div>
+                          <div>
+                            <span className="font-mono text-primary-400 font-semibold">{row[column.key]}</span>
+                          </div>
+                        </div>
                       )}
-                      {onEdit && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(row);
-                          }}
-                          className="p-1 text-gray-400 hover:text-blue-400 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                      
+                      {column.key === 'herb' && (
+                        <div>
+                          <span className="font-semibold text-white text-lg">{row[column.key]}</span>
+                        </div>
                       )}
-                      {onDelete && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(row);
-                          }}
-                          className="p-1 text-gray-400 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      
+                      {column.key === 'farmer' && (
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-blue-400" />
+                          <span className="text-gray-300 font-medium">{row[column.key]}</span>
+                        </div>
+                      )}
+                      
+                      {column.key === 'location' && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-emerald-400" />
+                          <span className="text-gray-300">{row[column.key]}</span>
+                        </div>
+                      )}
+                      
+                      {column.key === 'harvestDate' && (
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-purple-400" />
+                          <span className="text-gray-300">{new Date(row[column.key]).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                      
+                      {column.key === 'quantity' && (
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                          <span className="text-white font-semibold">{row[column.key]}</span>
+                        </div>
+                      )}
+                      
+                      {column.key === 'status' && (
+                        <div>
+                          {renderCellValue(row[column.key], column, row)}
+                        </div>
+                      )}
+                      
+                      {column.key === 'qualityScore' && (
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-400">Quality</span>
+                              <span className="text-sm font-semibold text-white">{row[column.key]}%</span>
+                            </div>
+                            <div className="w-20 h-2 bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  row[column.key] >= 90 ? 'bg-gradient-to-r from-emerald-500 to-green-400' : 
+                                  row[column.key] >= 70 ? 'bg-gradient-to-r from-yellow-500 to-orange-400' : 
+                                  'bg-gradient-to-r from-red-500 to-red-400'
+                                }`}
+                                style={{ width: `${row[column.key]}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {column.key === 'actions' && (
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onView && onView(row);
+                              }}
+                              className="p-2 bg-white/10 hover:bg-primary-500/20 border border-white/20 hover:border-primary-500/30 rounded-lg transition-all duration-200 group/btn"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4 text-gray-400 group-hover/btn:text-primary-400 transition-colors" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Add more actions
+                              }}
+                              className="p-2 bg-white/10 hover:bg-blue-500/20 border border-white/20 hover:border-blue-500/30 rounded-lg transition-all duration-200 group/btn"
+                              title="More Actions"
+                            >
+                              <MoreHorizontal className="w-4 h-4 text-gray-400 group-hover/btn:text-blue-400 transition-colors" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {!['id', 'herb', 'farmer', 'location', 'harvestDate', 'quantity', 'status', 'qualityScore', 'actions'].includes(column.key) && (
+                        renderCellValue(row[column.key], column, row)
                       )}
                     </div>
                   </td>
-                )}
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
         
         {sortedData.length === 0 && (
-          <div className="p-8 text-center text-gray-400">
-            No data available
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-gray-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-400 mb-2">No batches found</h3>
+            <p className="text-gray-500">Try adjusting your search or filter criteria</p>
           </div>
         )}
       </div>
