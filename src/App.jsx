@@ -8,6 +8,8 @@ import LabDashboard from './pages/Lab/LabDashboard';
 import CustomerPortal from './pages/Customer/CustomerPortal';
 import Reports from './pages/Reports/Reports';
 import Collections from './pages/Collections/Collections';
+import Settings from './pages/Settings/Settings';
+import Batches from './pages/Batches/Batches';
 import Toast from './components/UI/Toast';
 
 function App() {
@@ -101,6 +103,32 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <Collections user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/settings" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <Settings user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/batches" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <Batches user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />
