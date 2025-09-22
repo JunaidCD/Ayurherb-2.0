@@ -1,0 +1,138 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout/Layout';
+import Login from './pages/Login/Login';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import ProcessorDashboard from './pages/Processor/ProcessorDashboard';
+import LabDashboard from './pages/Lab/LabDashboard';
+import CustomerPortal from './pages/Customer/CustomerPortal';
+import Reports from './pages/Reports/Reports';
+import Collections from './pages/Collections/Collections';
+import Toast from './components/UI/Toast';
+
+function App() {
+  const [user, setUser] = useState(null);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    // Check for stored user session
+    const storedUser = localStorage.getItem('ayurherb_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('ayurherb_user', JSON.stringify(userData));
+    showToast('Login successful!', 'success');
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('ayurherb_user');
+    showToast('Logged out successfully', 'info');
+  };
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const getDashboardComponent = () => {
+    if (!user) return <Navigate to="/login" />;
+    
+    switch (user.role) {
+      case 'Admin':
+        return <AdminDashboard user={user} showToast={showToast} />;
+      case 'Processor':
+        return <ProcessorDashboard user={user} showToast={showToast} />;
+      case 'Lab Tester':
+        return <LabDashboard user={user} showToast={showToast} />;
+      case 'Customer':
+        return <CustomerPortal user={user} showToast={showToast} />;
+      default:
+        return <Navigate to="/login" />;
+    }
+  };
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-dark-900 text-white">
+        <Routes>
+          <Route 
+            path="/login" 
+            element={
+              user ? <Navigate to="/dashboard" /> : 
+              <Login onLogin={handleLogin} showToast={showToast} />
+            } 
+          />
+          
+          {/* Protected routes with layout */}
+          <Route 
+            path="/dashboard" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  {getDashboardComponent()}
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/reports" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <Reports user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/collections" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <Collections user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          {/* Public customer portal route */}
+          <Route 
+            path="/scan/:batchId" 
+            element={<CustomerPortal showToast={showToast} />} 
+          />
+          
+          {/* Default redirect */}
+          <Route 
+            path="/" 
+            element={
+              user ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
+            } 
+          />
+        </Routes>
+        
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+      </div>
+    </Router>
+  );
+}
+
+export default App;

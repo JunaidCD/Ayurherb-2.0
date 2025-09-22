@@ -1,0 +1,9 @@
+@echo off
+echo Starting Ayurherb 2.0 Development Server...
+echo.
+echo Installing dependencies...
+npm install
+echo.
+echo Starting development server...
+npm run dev
+pause
