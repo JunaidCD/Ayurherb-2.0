@@ -4,13 +4,13 @@ import {
   LayoutDashboard, 
   Package, 
   Settings, 
-  FileText, 
   Database,
   Beaker,
   BarChart3,
   Leaf,
   Users,
-  Shield
+  Shield,
+  Plus
 } from 'lucide-react';
 import { strings } from '../../utils/strings';
 
@@ -35,7 +35,7 @@ const Sidebar = ({ user }) => {
       ],
       'Processor': [
         { path: '/batches', icon: Package, label: strings.nav.batches },
-        { path: '/reports', icon: FileText, label: strings.nav.reports }
+        { path: '/add-processing', icon: Plus, label: 'Add Processing' }
       ],
       'Lab Tester': [
         { path: '/batches', icon: Package, label: strings.nav.batches },

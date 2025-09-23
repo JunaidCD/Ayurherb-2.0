@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Hyperledger Besu node
+  besu:
+    image: hyperledger/besu:latest
+    container_name: ayurherb-besu
+    command: [
+      "--network=dev",
+      "--miner-enabled",
+      "--miner-coinbase=0xfe3b557e8fb62b89f4916b721be55ceb828dbd73",
+      "--rpc-http-enabled",
+      "--rpc-http-host=0.0.0.0",
+      "--rpc-http-port=8545",
+      "--rpc-http-cors-origins=*",
+      "--rpc-ws-enabled",
+      "--rpc-ws-host=0.0.0.0",
+      "--rpc-ws-port=8546",
+      "--data-path=/opt/besu/data",
+      "--genesis-file=/opt/besu/genesis.json"
+    ]
+    ports:
+      - "8545:8545"
+      - "8546:8546"
+      - "30303:30303"
+    volumes:
+      - ./besu-data:/opt/besu/data
+      - ./besu-genesis.json:/opt/besu/genesis.json
+    networks:
+      - ayurherb-network
+
+  # Ayurherb Backend API
+  backend:
+    build: .
+    container_name: ayurherb-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - BESU_RPC_URL=http://besu:8545
+      - DB_PATH=/app/data/ayurherb.db
+      - UPLOAD_DIR=/app/uploads
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    depends_on:
+      - besu
+    networks:
+      - ayurherb-network
+    restart: unless-stopped
+
+networks:
+  ayurherb-network:
+    driver: bridge
+
+volumes:
+  besu-data:
+  backend-data:

@@ -6,10 +6,10 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import ProcessorDashboard from './pages/Processor/ProcessorDashboard';
 import LabDashboard from './pages/Lab/LabDashboard';
 import CustomerPortal from './pages/Customer/CustomerPortal';
-import Reports from './pages/Reports/Reports';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
+import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
 import Toast from './components/UI/Toast';
 
 function App() {
@@ -84,18 +84,6 @@ function App() {
             } 
           />
           
-          <Route 
-            path="/reports" 
-            element={
-              user ? (
-                <Layout user={user} onLogout={handleLogout}>
-                  <Reports user={user} showToast={showToast} />
-                </Layout>
-              ) : (
-                <Navigate to="/login" />
-              )
-            } 
-          />
           
           <Route 
             path="/collections" 
@@ -129,6 +117,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <Batches user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/add-processing/:batchId?" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <AddProcessingAdvanced user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />

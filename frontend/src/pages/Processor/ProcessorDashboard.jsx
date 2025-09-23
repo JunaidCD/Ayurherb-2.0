@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Package, Clock, CheckCircle, AlertCircle, Factory, TrendingUp,
   MapPin, Calendar, Scale, User, Activity, Zap, Target, RefreshCw,
-  Filter, Download, BarChart3, ArrowUpRight, ArrowDownRight, Sparkles
+  Filter, Download, BarChart3, ArrowUpRight, ArrowDownRight, Sparkles, Eye
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/UI/Card';
 import Modal from '../../components/UI/Modal';
 import { strings } from '../../utils/strings';
 import { api } from '../../utils/api';
+import { sharedStorage } from '../../utils/sharedStorage';
 
 const ProcessorDashboard = ({ user, showToast }) => {
+  const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
@@ -25,12 +28,26 @@ const ProcessorDashboard = ({ user, showToast }) => {
     loadBatches();
     // Staggered animations
     const timer = setTimeout(() => setAnimationStep(1), 300);
-    return () => clearTimeout(timer);
+    
+    // Set up real-time sync listener for collections changes
+    const removeListener = sharedStorage.addStorageListener((event) => {
+      if (event.key === 'ayurherb_collections') {
+        // Reload batches when collections change (new verified collections become batches)
+        loadBatches();
+        showToast('New batches available from farmer submissions!', 'success');
+      }
+    });
+    
+    return () => {
+      clearTimeout(timer);
+      removeListener();
+    };
   }, []);
 
   const loadBatches = async () => {
     try {
       setLoading(true);
+      // Load actual batches from verified collections
       const data = await api.getBatches();
       setBatches(data);
     } catch (error) {
@@ -130,7 +147,11 @@ const ProcessorDashboard = ({ user, showToast }) => {
             </div>
             
             <div className="flex items-center gap-4">
-              <button className="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-200">
+              <button 
+                onClick={loadBatches}
+                className="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-200"
+                title="Refresh Batches"
+              >
                 <RefreshCw className="w-5 h-5 text-white" />
               </button>
               <button className="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-200">
@@ -150,32 +171,32 @@ const ProcessorDashboard = ({ user, showToast }) => {
           {
             title: 'Active Batches',
             value: batches.length,
-            change: '+12%',
-            changeType: 'positive',
+            change: batches.length > 0 ? '+100%' : '0%',
+            changeType: batches.length > 0 ? 'positive' : 'neutral',
             icon: Package,
             gradient: 'from-blue-500 to-cyan-500'
           },
           {
             title: 'Processing Steps',
-            value: batches.reduce((acc, batch) => acc + (batch.processingSteps?.length || 0), 0),
-            change: '+8%',
-            changeType: 'positive',
+            value: batches.reduce((total, batch) => total + batch.processingSteps.length, 0),
+            change: batches.length > 0 ? '+50%' : '0%',
+            changeType: batches.length > 0 ? 'positive' : 'neutral',
             icon: Activity,
             gradient: 'from-emerald-500 to-primary-500'
           },
           {
             title: 'Completion Rate',
-            value: '94.2%',
-            change: '+3%',
-            changeType: 'positive',
+            value: batches.length > 0 ? '75%' : '0%',
+            change: batches.length > 0 ? '+15%' : '0%',
+            changeType: batches.length > 0 ? 'positive' : 'neutral',
             icon: Target,
             gradient: 'from-indigo-500 to-blue-500'
           },
           {
             title: 'Efficiency Score',
-            value: '87%',
-            change: '+5%',
-            changeType: 'positive',
+            value: batches.length > 0 ? '92%' : '0%',
+            change: batches.length > 0 ? '+8%' : '0%',
+            changeType: batches.length > 0 ? 'positive' : 'neutral',
             icon: Zap,
             gradient: 'from-yellow-500 to-orange-500'
           }
@@ -207,11 +228,14 @@ const ProcessorDashboard = ({ user, showToast }) => {
                     <div className="flex items-center gap-2 mt-2">
                       {stat.changeType === 'positive' ? (
                         <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-                      ) : (
+                      ) : stat.changeType === 'negative' ? (
                         <ArrowDownRight className="w-4 h-4 text-red-400" />
+                      ) : (
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
                       )}
                       <span className={`text-sm font-semibold ${
-                        stat.changeType === 'positive' ? 'text-emerald-400' : 'text-red-400'
+                        stat.changeType === 'positive' ? 'text-emerald-400' : 
+                        stat.changeType === 'negative' ? 'text-red-400' : 'text-gray-400'
                       }`}>
                         {stat.change}
                       </span>
@@ -225,120 +249,154 @@ const ProcessorDashboard = ({ user, showToast }) => {
         })}
       </div>
 
-      {/* Enhanced Batches Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {batches.map((batch, index) => (
-          <div
-            key={batch.id}
-            className={`group transform transition-all duration-700 ${
-              animationStep ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-            }`}
-            style={{ transitionDelay: `${(index + 4) * 100}ms` }}
-          >
-            <div className="relative h-full">
-              {/* Glow effect */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/30 via-blue-500/30 to-emerald-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
-              {/* Main card */}
-              <div className="relative h-full bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl group-hover:shadow-2xl transition-all duration-500">
-                
-                {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <Package className="w-7 h-7 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-1">{batch.herb}</h3>
-                      <p className="text-gray-400 text-sm font-medium">{batch.id}</p>
-                    </div>
-                  </div>
-                  <div className={`px-3 py-2 rounded-xl border ${getStatusColor(batch.status)} flex items-center gap-2 shadow-lg`}>
-                    {getStatusIcon(batch.status)}
-                    <span className="text-sm font-semibold">{batch.status}</span>
-                  </div>
-                </div>
-
-                {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <User className="w-4 h-4 text-blue-400" />
-                      <span className="text-gray-400 text-xs font-medium">Farmer</span>
-                    </div>
-                    <p className="text-white font-semibold text-sm">{batch.farmer}</p>
-                  </div>
-                  
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MapPin className="w-4 h-4 text-emerald-400" />
-                      <span className="text-gray-400 text-xs font-medium">Location</span>
-                    </div>
-                    <p className="text-white font-semibold text-sm">{batch.location}</p>
-                  </div>
-                  
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Scale className="w-4 h-4 text-yellow-400" />
-                      <span className="text-gray-400 text-xs font-medium">Quantity</span>
-                    </div>
-                    <p className="text-white font-semibold text-sm">{batch.quantity}</p>
-                  </div>
-                  
-                  <div className="p-3 bg-white/5 rounded-xl border border-white/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="w-4 h-4 text-purple-400" />
-                      <span className="text-gray-400 text-xs font-medium">Harvest</span>
-                    </div>
-                    <p className="text-white font-semibold text-sm">{new Date(batch.harvestDate).toLocaleDateString()}</p>
-                  </div>
-                </div>
-
-                {/* Processing Steps */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Activity className="w-5 h-5 text-primary-400" />
-                    <h4 className="text-white font-semibold">Processing Pipeline</h4>
-                  </div>
-                  <div className="space-y-3">
-                    {batch.processingSteps?.slice(0, 3).map((step, stepIndex) => (
-                      <div key={stepIndex} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10">
-                        <div className={`w-3 h-3 rounded-full shadow-lg ${
-                          step.status === 'Completed' ? 'bg-emerald-400' : 
-                          step.status === 'In Progress' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-500'
-                        }`}></div>
-                        <div className="flex-1">
-                          <p className="text-white font-medium text-sm">{step.step}</p>
-                          <p className="text-gray-400 text-xs">{step.status}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {batch.processingSteps?.length > 3 && (
-                      <div className="text-center">
-                        <span className="text-primary-400 text-sm font-medium">
-                          +{batch.processingSteps.length - 3} more steps
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <button
-                  onClick={() => {
-                    setSelectedBatch(batch);
-                    setShowProcessingModal(true);
-                  }}
-                  className="w-full py-3 px-4 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
-                >
-                  <Plus className="w-5 h-5" />
-                  Add Processing Step
-                </button>
+      {/* Batch Cards or Empty State */}
+      {batches.length === 0 ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="relative mb-8">
+              <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/30 via-blue-500/30 to-emerald-500/30 rounded-3xl blur opacity-60"></div>
+              <div className="relative w-24 h-24 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-3xl flex items-center justify-center shadow-2xl mx-auto">
+                <Package className="w-12 h-12 text-gray-400" />
               </div>
             </div>
+            <h3 className="text-2xl font-bold text-white mb-8">New Item will appear here</h3>
+            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
+              <div className="w-2 h-2 bg-primary-400 rounded-full animate-pulse"></div>
+              <span className="text-primary-300 text-sm font-medium">Waiting for new batches...</span>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-white mb-2">Active Processing Batches</h2>
+              <p className="text-gray-400">Manage and track your processing workflows</p>
+            </div>
+            <button 
+              onClick={loadBatches}
+              className="px-6 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {batches.map((batch, index) => (
+              <div
+                key={batch.id}
+                className={`group transform transition-all duration-500 ${
+                  animationStep ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                }`}
+                style={{ transitionDelay: `${index * 100 + 500}ms` }}
+              >
+                <div className="relative h-full">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/30 via-blue-500/30 to-emerald-500/30 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <div className="relative h-full bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-4 shadow-xl group-hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105">
+                    
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
+                            <Factory className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border border-gray-900 flex items-center justify-center">
+                            <div className="w-1 h-1 bg-white rounded-full"></div>
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{batch.id}</h3>
+                          <p className="text-primary-400 text-xs font-mono">{batch.herb}</p>
+                        </div>
+                      </div>
+                      <div className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(batch.status)}`}>
+                        {getStatusIcon(batch.status)}
+                        <span className="ml-1">{batch.status}</span>
+                      </div>
+                    </div>
+
+                    {/* Farmer Submission Details Grid */}
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10">
+                        <p className="text-gray-400 text-xs mb-1">Batch ID</p>
+                        <p className="text-white font-semibold text-xs">{batch.batchId}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10">
+                        <p className="text-gray-400 text-xs mb-1">Collector</p>
+                        <p className="text-white font-semibold text-xs">{batch.collectorId}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10">
+                        <p className="text-gray-400 text-xs mb-1">Weight</p>
+                        <div className="flex items-center gap-1">
+                          <Scale className="w-3 h-3 text-primary-400" />
+                          <p className="text-white font-semibold text-xs">{batch.weight}</p>
+                        </div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10">
+                        <p className="text-gray-400 text-xs mb-1">Moisture</p>
+                        <p className="text-white font-semibold text-xs">{batch.moisture}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10 col-span-2">
+                        <p className="text-gray-400 text-xs mb-1">GPS Coordinates</p>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-primary-400" />
+                          <p className="text-white font-semibold text-xs">{batch.gpsCoordinates}</p>
+                        </div>
+                        <p className="text-gray-400 text-xs mt-1">Accuracy: {batch.accuracy}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-2 border border-white/10 col-span-2">
+                        <p className="text-gray-400 text-xs mb-1">Collection Time</p>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-primary-400" />
+                          <p className="text-white font-semibold text-xs">{batch.collectionTime}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Processing Steps */}
+                    <div className="mb-4">
+                      <p className="text-gray-400 text-xs mb-2">Recent Processing Steps</p>
+                      <div className="space-y-1">
+                        {batch.processingSteps.slice(-2).map((step, stepIndex) => (
+                          <div key={stepIndex} className="flex items-center gap-2 bg-white/5 rounded-lg p-2 border border-white/10">
+                            <div className={`w-2 h-2 rounded-full ${
+                              step.status === 'Completed' ? 'bg-emerald-400' : 'bg-yellow-400'
+                            }`}></div>
+                            <span className="text-white text-xs font-medium flex-1">{step.step}</span>
+                            <span className="text-gray-400 text-xs">{new Date(step.date).toLocaleDateString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => showToast(`Viewing batch ${batch.id}`, 'info')}
+                        className="flex-1 py-2 px-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
+                      >
+                        <Eye className="w-3 h-3" />
+                        <span className="text-xs">View Details</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => navigate(`/add-processing/${batch.id}`)}
+                        className="flex-1 py-2 px-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span className="text-xs">Add Step</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Processing Modal */}
       <Modal

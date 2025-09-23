@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer App - Data Submission</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2d5a27;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌿 Farmer Data Submission</h1>
+        <p>Submit your herb collection data - it will appear instantly in the processor dashboard!</p>
+        
+        <form id="farmerForm">
+            <div class="form-group">
+                <label for="collectorId">Collector ID:</label>
+                <input type="text" id="collectorId" value="COL 2024" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="speciesName">Herb/Species:</label>
+                <select id="speciesName" required>
+                    <option value="">Select herb...</option>
+                    <option value="Allovera">Allovera</option>
+                    <option value="Brahmi">Brahmi</option>
+                    <option value="Ashwagandha">Ashwagandha</option>
+                    <option value="Turmeric">Turmeric</option>
+                    <option value="Neem">Neem</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="weight">Weight/Quantity:</label>
+                <input type="text" id="weight" placeholder="e.g., 5 kg" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="moisture">Moisture %:</label>
+                <input type="text" id="moisture" placeholder="e.g., 40%">
+            </div>
+            
+            <div class="form-group">
+                <label for="gpsCoordinates">GPS Coordinates:</label>
+                <input type="text" id="gpsCoordinates" placeholder="e.g., 22.6290°, 88.4412°">
+            </div>
+            
+            <div class="form-group">
+                <label for="accuracy">GPS Accuracy:</label>
+                <input type="text" id="accuracy" placeholder="e.g., ±162 meters">
+            </div>
+            
+            <div class="form-group">
+                <label for="qualityGrade">Quality Grade:</label>
+                <select id="qualityGrade">
+                    <option value="Standard (A)">Standard (A)</option>
+                    <option value="Premium (AA)">Premium (AA)</option>
+                    <option value="Basic (B)">Basic (B)</option>
+                </select>
+            </div>
+            
+            <button type="submit">📤 Submit to Processor Dashboard</button>
+        </form>
+        
+        <div id="result"></div>
+        
+        <div style="margin-top: 30px; padding: 15px; background-color: #e7f3ff; border-radius: 5px;">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li>Fill out the form above</li>
+                <li>Click "Submit to Processor Dashboard"</li>
+                <li>Open your processor dashboard in another tab</li>
+                <li>The data will appear instantly as a new batch!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Simulate the shared storage functionality
+        const STORAGE_KEY = 'ayurherb_collections';
+        
+        function submitFarmerCollection(farmerData) {
+            try {
+                // Get existing collections
+                const existingCollections = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                
+                // Create new collection
+                const collection = {
+                    id: `COL${Date.now().toString().slice(-3)}`,
+                    batchId: `BAT 2024 ${Date.now().toString().slice(-3)}`,
+                    collectorId: farmerData.collectorId,
+                    farmer: farmerData.collectorId,
+                    herb: farmerData.speciesName,
+                    speciesName: farmerData.speciesName,
+                    quantity: farmerData.weight,
+                    weight: farmerData.weight,
+                    moisture: farmerData.moisture,
+                    gpsCoordinates: farmerData.gpsCoordinates,
+                    accuracy: farmerData.accuracy,
+                    collectionTime: new Date().toLocaleString(),
+                    submissionDate: new Date().toISOString().split('T')[0],
+                    timestamp: new Date().toLocaleString(),
+                    status: 'Synced', // Ready for processing
+                    location: farmerData.gpsCoordinates,
+                    qualityGrade: farmerData.qualityGrade,
+                    qualityAssessment: farmerData.qualityGrade,
+                    createdAt: new Date().toISOString(),
+                    lastUpdated: new Date().toISOString()
+                };
+                
+                // Add to collections
+                existingCollections.push(collection);
+                
+                // Save to localStorage
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(existingCollections));
+                localStorage.setItem('ayurherb_last_update', new Date().toISOString());
+                
+                // Trigger storage event for other tabs
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: STORAGE_KEY,
+                    newValue: JSON.stringify(existingCollections),
+                    storageArea: localStorage
+                }));
+                
+                return {
+                    success: true,
+                    collection: collection
+                };
+                
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+        
+        // Form submission handler
+        document.getElementById('farmerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                collectorId: document.getElementById('collectorId').value,
+                speciesName: document.getElementById('speciesName').value,
+                weight: document.getElementById('weight').value,
+                moisture: document.getElementById('moisture').value,
+                gpsCoordinates: document.getElementById('gpsCoordinates').value,
+                accuracy: document.getElementById('accuracy').value,
+                qualityGrade: document.getElementById('qualityGrade').value
+            };
+            
+            const result = submitFarmerCollection(formData);
+            const resultDiv = document.getElementById('result');
+            
+            if (result.success) {
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ Success! Collection ${result.collection.id} submitted successfully!<br>
+                        <strong>Batch ID:</strong> ${result.collection.batchId}<br>
+                        <strong>Status:</strong> Ready for processing<br>
+                        <em>Check your processor dashboard - it should appear immediately!</em>
+                    </div>
+                `;
+                // Reset form
+                document.getElementById('farmerForm').reset();
+                document.getElementById('collectorId').value = 'COL 2024';
+                document.getElementById('qualityGrade').value = 'Standard (A)';
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        ❌ Error: ${result.error}
+                    </div>
+                `;
+            }
+        });
+        
+        // Auto-generate GPS coordinates
+        function generateGPS() {
+            const lat = (Math.random() * (25 - 20) + 20).toFixed(4);
+            const lng = (Math.random() * (90 - 70) + 70).toFixed(4);
+            const accuracy = Math.floor(Math.random() * 200) + 50;
+            
+            document.getElementById('gpsCoordinates').value = `${lat}°, ${lng}°`;
+            document.getElementById('accuracy').value = `±${accuracy} meters`;
+        }
+        
+        // Auto-generate GPS on page load
+        generateGPS();
+    </script>
+</body>
+</html>

@@ -9,6 +9,8 @@ import StatusBadge from '../../components/UI/StatusBadge';
 import DataTable from '../../components/UI/DataTable';
 import { strings } from '../../utils/strings';
 import { api } from '../../utils/api';
+import { sharedStorage } from '../../utils/sharedStorage';
+import FarmerSubmissionForm from '../../components/FarmerSubmissionForm';
 
 const Collections = ({ user, showToast }) => {
   const [collections, setCollections] = useState([]);
@@ -22,12 +24,26 @@ const Collections = ({ user, showToast }) => {
     synced: 0,
     verified: 0
   });
+  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
 
   useEffect(() => {
     loadCollections();
     // Staggered animations
     const timer = setTimeout(() => setAnimationStep(1), 300);
-    return () => clearTimeout(timer);
+    
+    // Set up real-time sync listener
+    const removeListener = sharedStorage.addStorageListener((event) => {
+      if (event.key === 'ayurherb_collections') {
+        // Reload collections when data changes in other tabs
+        loadCollections();
+        showToast('Collections updated from another application', 'info');
+      }
+    });
+    
+    return () => {
+      clearTimeout(timer);
+      removeListener();
+    };
   }, []);
 
   const loadCollections = async () => {
@@ -54,14 +70,12 @@ const Collections = ({ user, showToast }) => {
   const handleSyncCollection = async (collection) => {
     try {
       showToast(`Syncing collection ${collection.id}...`, 'info');
-      // Simulate sync process
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Update collection status
-      const updatedCollections = collections.map(c => 
-        c.id === collection.id ? { ...c, status: 'Synced' } : c
-      );
-      setCollections(updatedCollections);
+      // Update collection status via API
+      await api.updateCollectionStatus(collection.id, 'Synced');
+      
+      // Reload collections to get updated data
+      await loadCollections();
       showToast('Collection synced successfully', 'success');
     } catch (error) {
       showToast('Failed to sync collection', 'error');
@@ -71,15 +85,13 @@ const Collections = ({ user, showToast }) => {
   const handleMarkVerified = async (collection) => {
     try {
       showToast(`Marking collection ${collection.id} as verified...`, 'info');
-      // Simulate verification process
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Update collection status
-      const updatedCollections = collections.map(c => 
-        c.id === collection.id ? { ...c, status: 'Verified' } : c
-      );
-      setCollections(updatedCollections);
-      showToast('Collection marked as verified', 'success');
+      // Update collection status via API
+      await api.updateCollectionStatus(collection.id, 'Verified');
+      
+      // Reload collections to get updated data
+      await loadCollections();
+      showToast(`Collection ${collection.id} verified and sent to processor dashboard!`, 'success');
     } catch (error) {
       showToast('Failed to verify collection', 'error');
     }
@@ -203,9 +215,12 @@ const Collections = ({ user, showToast }) => {
                 </button>
               </div>
               
-              <button className="px-6 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2">
+              <button 
+                onClick={() => setShowSubmissionForm(true)}
+                className="px-6 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
+              >
                 <Sparkles className="w-5 h-5" />
-                Bulk Actions
+                New Submission
               </button>
             </div>
           </div>
@@ -353,28 +368,45 @@ const Collections = ({ user, showToast }) => {
                     <StatusBadge status={collection.status} />
                   </div>
 
-                  {/* Details Grid */}
+                  {/* Farmer Submission Details Grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                      <p className="text-gray-400 text-xs mb-1">Herb Type</p>
-                      <p className="text-white font-semibold">{collection.herb}</p>
+                      <p className="text-gray-400 text-xs mb-1">Batch ID</p>
+                      <p className="text-white font-semibold">{collection.batchId}</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                      <p className="text-gray-400 text-xs mb-1">Quantity</p>
-                      <p className="text-white font-semibold">{collection.quantity}</p>
+                      <p className="text-gray-400 text-xs mb-1">Collector ID</p>
+                      <p className="text-white font-semibold">{collection.collectorId}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Species Name</p>
+                      <p className="text-white font-semibold">{collection.speciesName}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Weight</p>
+                      <p className="text-white font-semibold">{collection.weight}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Moisture</p>
+                      <p className="text-white font-semibold">{collection.moisture}</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <p className="text-gray-400 text-xs mb-1">Quality Grade</p>
+                      <p className="text-white font-semibold">{collection.qualityGrade}</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2">
-                      <p className="text-gray-400 text-xs mb-1">Location</p>
+                      <p className="text-gray-400 text-xs mb-1">GPS Coordinates</p>
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-primary-400" />
-                        <p className="text-white font-semibold">{collection.location}</p>
+                        <p className="text-white font-semibold">{collection.gpsCoordinates}</p>
                       </div>
+                      <p className="text-gray-400 text-xs mt-1">Accuracy: {collection.accuracy}</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-3 border border-white/10 col-span-2">
-                      <p className="text-gray-400 text-xs mb-1">Submission Date</p>
+                      <p className="text-gray-400 text-xs mb-1">Collection Time</p>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-primary-400" />
-                        <p className="text-white font-semibold">{new Date(collection.submissionDate).toLocaleDateString()}</p>
+                        <p className="text-white font-semibold">{collection.collectionTime}</p>
                       </div>
                     </div>
                   </div>
@@ -454,12 +486,13 @@ const Collections = ({ user, showToast }) => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-white/5 border-b border-white/10">
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Collection ID</th>
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Farmer</th>
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Herb</th>
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Quantity</th>
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Location</th>
-                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Submitted</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Batch ID</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Collector</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Species</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Weight</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Moisture</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">GPS Coordinates</th>
+                    <th className="text-left py-4 px-6 text-gray-300 font-semibold">Collection Time</th>
                     <th className="text-left py-4 px-6 text-gray-300 font-semibold">Status</th>
                     <th className="text-left py-4 px-6 text-gray-300 font-semibold">Actions</th>
                   </tr>
@@ -472,32 +505,35 @@ const Collections = ({ user, showToast }) => {
                       onClick={() => showToast(`Viewing details for ${collection.id}`, 'info')}
                     >
                       <td className="py-4 px-6">
-                        <span className="font-mono text-primary-400 font-semibold">{collection.id}</span>
+                        <span className="font-mono text-primary-400 font-semibold">{collection.batchId}</span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-emerald-500 rounded-lg flex items-center justify-center">
                             <User className="w-4 h-4 text-white" />
                           </div>
-                          <span className="text-white font-medium">{collection.farmer}</span>
+                          <span className="text-white font-medium">{collection.collectorId}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-gray-300">{collection.herb}</span>
+                        <span className="text-gray-300">{collection.speciesName}</span>
                       </td>
                       <td className="py-4 px-6">
-                        <span className="text-white font-semibold">{collection.quantity}</span>
+                        <span className="text-white font-semibold">{collection.weight}</span>
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="text-white font-semibold">{collection.moisture}</span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-primary-400" />
-                          <span className="text-gray-400">{collection.location}</span>
+                          <span className="text-gray-400 text-xs">{collection.gpsCoordinates}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-primary-400" />
-                          <span className="text-gray-400">{new Date(collection.submissionDate).toLocaleDateString()}</span>
+                          <span className="text-gray-400 text-xs">{collection.collectionTime}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
@@ -583,6 +619,17 @@ const Collections = ({ user, showToast }) => {
           </div>
         </div>
       </div>
+
+      {/* Farmer Submission Form */}
+      <FarmerSubmissionForm
+        isOpen={showSubmissionForm}
+        onClose={() => setShowSubmissionForm(false)}
+        showToast={showToast}
+        onSubmissionSuccess={(newCollection) => {
+          loadCollections(); // Reload to show the new submission
+          showToast(`New collection ${newCollection.id} added successfully!`, 'success');
+        }}
+      />
     </div>
   );
 };
