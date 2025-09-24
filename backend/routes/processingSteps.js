@@ -54,25 +54,17 @@ router.post('/', upload.single('certificate'), async (req, res) => {
         } = req.body;
 
         // Validate required fields
-        if (!batchId || !processorId || !stepType) {
+        if (!batchId || !stepType) {
             return res.status(400).json({
-                error: 'Missing required fields: batchId, processorId, stepType'
+                error: 'Missing required fields: batchId, stepType'
             });
         }
 
-        // Verify batch exists
+        // ONLY check if batch exists - nothing else!
         const batch = await database.getBatchById(batchId);
         if (!batch) {
             return res.status(404).json({
                 error: 'Batch not found'
-            });
-        }
-
-        // Verify processor exists
-        const processor = await database.getProcessorById(processorId);
-        if (!processor) {
-            return res.status(404).json({
-                error: 'Processor not found'
             });
         }
 
@@ -89,7 +81,7 @@ router.post('/', upload.single('certificate'), async (req, res) => {
         // Prepare step data
         const stepData = {
             batchId,
-            processorId,
+            processorId: processorId || 'PROC001', // Use default processor
             stepType,
             temperature: temperature ? parseFloat(temperature) : null,
             duration: duration ? parseInt(duration) : null,
@@ -130,9 +122,9 @@ router.post('/', upload.single('certificate'), async (req, res) => {
                     ...stepData,
                     blockchain: {
                         transactionHash: blockchainResult.transactionHash,
-                        blockNumber: blockchainResult.blockNumber,
+                        blockNumber: blockchainResult.blockNumber?.toString() || '0',
                         stepHash: blockchainResult.stepHash,
-                        gasUsed: blockchainResult.gasUsed
+                        gasUsed: blockchainResult.gasUsed?.toString() || '0'
                     }
                 },
                 message: 'Processing step added successfully to database and blockchain'

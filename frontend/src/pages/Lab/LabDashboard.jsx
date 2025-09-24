@@ -42,83 +42,14 @@ const LabDashboard = ({ user, showToast = console.log }) => {
     loadRecentActivity();
   }, []);
 
-  // Force render with data for testing
-  useEffect(() => {
-    if (batches.length === 0 && !loading) {
-      console.log('Force loading batches...');
-      const forceBatches = [
-        {
-          id: 'COL001',
-          farmer: 'Rajesh Kumar',
-          herb: 'Ashwagandha',
-          quantity: '500kg',
-          labResults: null
-        },
-        {
-          id: 'COL002',
-          farmer: 'Priya Sharma',
-          herb: 'Turmeric',
-          quantity: '750kg',
-          labResults: null
-        }
-      ];
-      setBatches(forceBatches);
-      calculateStats(forceBatches);
-    }
-  }, [batches, loading]);
+  // No force loading - keep batches empty
 
   const loadBatches = async () => {
     try {
       setLoading(true);
       
-      // Always use mock data for demo - ensure we have batches to test
-      const mockBatches = [
-        {
-          id: 'COL001',
-          batchId: 'BAT-2024-001',
-          farmer: 'Rajesh Kumar',
-          herb: 'Ashwagandha',
-          quantity: '500kg',
-          location: 'Kerala, India',
-          gpsCoordinates: '10.8505°N, 76.2711°E',
-          harvestDate: '2024-09-20',
-          submissionDate: '2024-09-23',
-          status: 'Verified',
-          qualityScore: 94,
-          labResults: null // Pending lab test
-        },
-        {
-          id: 'COL002',
-          batchId: 'BAT-2024-002',
-          farmer: 'Priya Sharma',
-          herb: 'Turmeric',
-          quantity: '750kg',
-          location: 'Tamil Nadu, India',
-          gpsCoordinates: '11.1271°N, 78.6569°E',
-          harvestDate: '2024-09-21',
-          submissionDate: '2024-09-24',
-          status: 'Verified',
-          qualityScore: 88,
-          labResults: null // Pending lab test
-        },
-        {
-          id: 'COL003',
-          batchId: 'BAT-2024-003',
-          farmer: 'Amit Patel',
-          herb: 'Brahmi',
-          quantity: '300kg',
-          location: 'Gujarat, India',
-          gpsCoordinates: '23.0225°N, 72.5714°E',
-          harvestDate: '2024-09-19',
-          submissionDate: '2024-09-22',
-          status: 'Verified',
-          qualityScore: 91,
-          labResults: {
-            ayushCompliance: true,
-            testDate: '2024-09-23'
-          }
-        }
-      ];
+      // Empty batches array - no items for testing
+      const mockBatches = [];
       
       setBatches(mockBatches);
       calculateStats(mockBatches);
@@ -522,7 +453,7 @@ const LabDashboard = ({ user, showToast = console.log }) => {
                 {filteredBatches.length === 0 ? (
                   <div className="text-center py-12">
                     <Beaker className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">No batches found matching your criteria</p>
+                    <p className="text-gray-400 text-lg">New Item for Testing will appear here</p>
                   </div>
                 ) : (
                   filteredBatches.map((batch) => (

@@ -158,22 +158,51 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
     try {
       setSaving(true);
       
-      const processingStep = {
-        step: processingForm.stepType,
-        temperature: processingForm.temperature,
-        duration: processingForm.duration,
-        notes: processingForm.notes,
-        description: `${processingForm.stepType} process completed`,
-        date: new Date().toISOString().split('T')[0],
-        timestamp: new Date().toLocaleString(),
-        status: 'Completed'
+      // Show blockchain submission message
+      showToast('Submitting to blockchain...', 'info');
+      
+      const processingStepData = {
+        batchId: batch?.batchId || batch?.id || batchId,
+        processorId: user?.id || 'PROC001', // Default processor ID
+        stepType: processingForm.stepType,
+        temperature: processingForm.temperature ? parseFloat(processingForm.temperature) : null,
+        duration: processingForm.duration ? parseInt(processingForm.duration) : null,
+        notes: processingForm.notes || ''
       };
 
-      if (batchId) {
-        await api.addProcessingStep(batchId, processingStep);
-        showToast(`Processing step added to batch ${batchId}`, 'success');
-      } else {
-        showToast('Processing step recorded successfully', 'success');
+      // Call real backend API
+      const response = await fetch('http://localhost:3001/api/v1/processing-steps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(processingStepData)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to save processing step');
+      }
+
+      if (result.success && result.data.blockchain) {
+        // Real blockchain transaction successful
+        const blockchainData = result.data.blockchain;
+        
+        showToast(`✅ Successfully saved to blockchain!\nTransaction: ${blockchainData.transactionHash.substring(0, 20)}...`, 'success');
+        
+        // Show transaction details modal with real data
+        showTransactionModal(blockchainData.transactionHash, {
+          ...blockchainData,
+          network: 'Hyperledger Besu',
+          contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS || 'Contract Address'
+        });
+      } else if (result.success) {
+        // Database saved but blockchain failed
+        showToast('⚠️ Saved to database but blockchain transaction failed', 'warning');
+        if (result.blockchainError) {
+          console.error('Blockchain error:', result.blockchainError);
+        }
       }
       
       // Reset form
@@ -184,14 +213,70 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
         notes: ''
       });
       
-      // Navigate back to dashboard
-      navigate('/dashboard');
-      
     } catch (error) {
-      showToast('Failed to save processing step: ' + error.message, 'error');
+      console.error('Error saving processing step:', error);
+      showToast('Failed to save to blockchain: ' + error.message, 'error');
     } finally {
       setSaving(false);
     }
+  };
+
+  const showTransactionModal = (txHash, blockchainData) => {
+    // Create a temporary modal to show transaction details
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
+    modal.innerHTML = `
+      <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-2">Blockchain Success!</h3>
+          <p class="text-gray-400">Processing step saved immutably</p>
+        </div>
+        
+        <div class="space-y-4 mb-6">
+          <div class="bg-slate-700/50 rounded-lg p-4">
+            <p class="text-sm text-gray-400 mb-1">Transaction Hash</p>
+            <p class="text-white font-mono text-xs break-all">${txHash}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-700/50 rounded-lg p-3">
+              <p class="text-sm text-gray-400 mb-1">Block Number</p>
+              <p class="text-white font-semibold">#${blockchainData.blockNumber}</p>
+            </div>
+            <div class="bg-slate-700/50 rounded-lg p-3">
+              <p class="text-sm text-gray-400 mb-1">Gas Used</p>
+              <p class="text-white font-semibold">${blockchainData.gasUsed}</p>
+            </div>
+          </div>
+          <div class="bg-slate-700/50 rounded-lg p-3">
+            <p class="text-sm text-gray-400 mb-1">Network</p>
+            <p class="text-white font-semibold">${blockchainData.network}</p>
+          </div>
+        </div>
+        
+        <div class="flex gap-3">
+          <button onclick="navigator.clipboard.writeText('${txHash}'); this.textContent='Copied!'" class="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all duration-200">
+            Copy Hash
+          </button>
+          <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all duration-200">
+            Continue
+          </button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Auto-remove after 15 seconds
+    setTimeout(() => {
+      if (modal.parentNode) {
+        modal.remove();
+      }
+    }, 15000);
   };
 
   if (loading) {
@@ -552,7 +637,7 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                   ) : (
                     <>
                       <Shield className="w-5 h-5" />
-                      Save to Blockchain
+                      Save on Blockchain
                     </>
                   )}
                 </button>

@@ -366,7 +366,21 @@ const ProcessorDashboard = ({ user, showToast }) => {
                               step.status === 'Completed' ? 'bg-emerald-400' : 'bg-yellow-400'
                             }`}></div>
                             <span className="text-white text-xs font-medium flex-1">{step.step}</span>
-                            <span className="text-gray-400 text-xs">{new Date(step.date).toLocaleDateString()}</span>
+                            
+                            {/* Blockchain Verification Status */}
+                            {step.transactionHash ? (
+                              <div className="flex items-center gap-1">
+                                <CheckCircle className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400 text-xs font-medium">Verified on Blockchain ✅</span>
+                              </div>
+                            ) : step.blockchainError ? (
+                              <div className="flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3 text-yellow-400" />
+                                <span className="text-yellow-400 text-xs">Blockchain Pending</span>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">{new Date(step.date).toLocaleDateString()}</span>
+                            )}
                           </div>
                         ))}
                       </div>

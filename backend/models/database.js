@@ -173,6 +173,33 @@ class Database {
         });
     }
 
+    async addBatch(batchData) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                INSERT INTO batches (id, herb_type, farmer_id, farmer_name, origin_location, harvest_date, quantity, quality_grade, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            this.db.run(sql, [
+                batchData.id,
+                batchData.herb_type,
+                batchData.farmer_id,
+                batchData.farmer_name,
+                batchData.origin_location,
+                batchData.harvest_date,
+                batchData.quantity,
+                batchData.quality_grade,
+                batchData.status
+            ], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: batchData.id, ...batchData });
+                }
+            });
+        });
+    }
+
     // Processor operations
     async getProcessors() {
         return new Promise((resolve, reject) => {
@@ -197,6 +224,29 @@ class Database {
                     reject(err);
                 } else {
                     resolve(row);
+                }
+            });
+        });
+    }
+
+    async addProcessor(processorData) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                INSERT INTO processors (id, name, location, certification, contact_info)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+
+            this.db.run(sql, [
+                processorData.id,
+                processorData.name,
+                processorData.location,
+                processorData.certification,
+                processorData.contact_info
+            ], function(err) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve({ id: processorData.id, ...processorData });
                 }
             });
         });

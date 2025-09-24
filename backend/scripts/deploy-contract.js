@@ -72,14 +72,15 @@ async function deployContract() {
         const deployedContract = await deployTx.send({
             from: account.address,
             gas: gas,
-            gasPrice: process.env.GAS_PRICE || '20000000000'
+            gasPrice: '0'
         });
 
         console.log('✅ Contract deployed successfully!');
         console.log('📍 Contract address:', deployedContract.options.address);
         console.log('🔗 Transaction hash:', deployedContract.transactionHash);
 
-        // Save contract information
+        // Save contract information (convert BigInt to string)
+        const networkId = await web3.eth.net.getId();
         const contractInfo = {
             address: deployedContract.options.address,
             abi: abi,
@@ -89,7 +90,7 @@ async function deployContract() {
             deployedAt: new Date().toISOString(),
             network: {
                 rpcUrl: process.env.BESU_RPC_URL,
-                networkId: await web3.eth.net.getId()
+                networkId: networkId.toString()
             }
         };
 

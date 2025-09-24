@@ -206,9 +206,9 @@ class BlockchainService {
 
             return {
                 transactionHash: transaction.transactionHash,
-                blockNumber: transaction.blockNumber,
+                blockNumber: transaction.blockNumber?.toString() || '0',
                 blockHash: transaction.blockHash,
-                gasUsed: transaction.gasUsed,
+                gasUsed: transaction.gasUsed?.toString() || '0',
                 stepHash: stepHash,
                 status: 'confirmed'
             };
