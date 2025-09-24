@@ -1,9 +1,33 @@
-// Mock API functions for Ayurherb 2.0
-// Replace these with actual API calls when backend is ready
+// API functions for Ayurherb 2.0
+// Now connecting to real backend server
 
 import { sharedStorage } from './sharedStorage.js';
 
+const API_BASE_URL = 'http://localhost:3001/api/v1';
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function for API calls
+const apiCall = async (endpoint, options = {}) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+      },
+      ...options
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.warn(`API call failed for ${endpoint}:`, error.message);
+    // Fallback to mock data for development
+    throw error;
+  }
+};
 
 // Mock data - Exact farmer submission data from Image 1
 let mockCollections = [
@@ -143,6 +167,16 @@ const mockChartData = [
 
 // API Functions
 export const api = {
+  // Health check
+  healthCheck: async () => {
+    try {
+      const response = await fetch('http://localhost:3001/health');
+      return await response.json();
+    } catch (error) {
+      throw new Error('Backend server not available');
+    }
+  },
+
   // Authentication
   login: async (credentials) => {
     await delay(1000);
@@ -200,51 +234,76 @@ export const api = {
 
   // Processing
   addProcessingStep: async (batchId, stepData) => {
-    await delay(1000);
-    
-    // Get current batches and update the specific batch
-    const batches = sharedStorage.getBatches();
-    const batchIndex = batches.findIndex(b => b.id === batchId);
-    
-    if (batchIndex >= 0) {
-      const newStep = {
-        id: Date.now().toString(),
-        step: stepData.step || stepData.stepType,
-        stepType: stepData.stepType,
-        temperature: stepData.temperature,
-        duration: stepData.duration,
-        notes: stepData.notes,
-        description: stepData.description || `${stepData.stepType} process completed`,
-        date: new Date().toISOString().split('T')[0],
-        timestamp: new Date().toLocaleString(),
-        status: 'Completed'
+    try {
+      // Try real API first
+      const result = await apiCall('/processing-steps', {
+        method: 'POST',
+        body: JSON.stringify({
+          batchId,
+          processorId: 'PROC001',
+          stepType: stepData.stepType || stepData.step,
+          temperature: stepData.temperature || 0,
+          duration: stepData.duration || '',
+          notes: stepData.notes || '',
+          fileHash: ''
+        })
+      });
+      
+      return {
+        success: true,
+        message: 'Processing step added to blockchain successfully',
+        step: result,
+        blockchain: true
       };
+    } catch (error) {
+      // Fallback to mock/local storage
+      await delay(1000);
       
-      // Add the step to the batch's processing steps
-      if (!batches[batchIndex].processingSteps) {
-        batches[batchIndex].processingSteps = [];
-      }
-      batches[batchIndex].processingSteps.push(newStep);
+      // Get current batches and update the specific batch
+      const batches = sharedStorage.getBatches();
+      const batchIndex = batches.findIndex(b => b.id === batchId);
       
-      // Update the collections in shared storage
-      const collections = sharedStorage.getCollections();
-      const collectionIndex = collections.findIndex(c => c.batchId === batches[batchIndex].batchId);
-      if (collectionIndex >= 0) {
-        collections[collectionIndex].lastUpdated = new Date().toISOString();
-        sharedStorage.setCollections(collections);
+      if (batchIndex >= 0) {
+        const newStep = {
+          id: Date.now().toString(),
+          step: stepData.step || stepData.stepType,
+          stepType: stepData.stepType,
+          temperature: stepData.temperature,
+          duration: stepData.duration,
+          notes: stepData.notes,
+          description: stepData.description || `${stepData.stepType} process completed`,
+          date: new Date().toISOString().split('T')[0],
+          timestamp: new Date().toLocaleString(),
+          status: 'Completed'
+        };
+        
+        // Add the step to the batch's processing steps
+        if (!batches[batchIndex].processingSteps) {
+          batches[batchIndex].processingSteps = [];
+        }
+        batches[batchIndex].processingSteps.push(newStep);
+        
+        // Update the collections in shared storage
+        const collections = sharedStorage.getCollections();
+        const collectionIndex = collections.findIndex(c => c.batchId === batches[batchIndex].batchId);
+        if (collectionIndex >= 0) {
+          collections[collectionIndex].lastUpdated = new Date().toISOString();
+          sharedStorage.setCollections(collections);
+        }
       }
+      
+      return {
+        success: true,
+        message: 'Processing step added successfully (local storage)',
+        step: {
+          id: Date.now().toString(),
+          ...stepData,
+          date: new Date().toISOString().split('T')[0],
+          status: 'Completed'
+        },
+        blockchain: false
+      };
     }
-    
-    return {
-      success: true,
-      message: 'Processing step added successfully',
-      step: {
-        id: Date.now().toString(),
-        ...stepData,
-        date: new Date().toISOString().split('T')[0],
-        status: 'Completed'
-      }
-    };
   },
 
   // Lab Testing

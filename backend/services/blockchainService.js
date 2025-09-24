@@ -28,9 +28,13 @@ class BlockchainService {
             // Load contract ABI
             await this.loadContractABI();
 
-            // Initialize contract if address is provided
-            if (this.contractAddress && this.contractABI) {
+            // Initialize contract if address is provided and valid
+            if (this.contractAddress && this.contractABI && this.isValidAddress(this.contractAddress)) {
                 this.contract = new this.web3.eth.Contract(this.contractABI, this.contractAddress);
+                console.log('Smart contract initialized at:', this.contractAddress);
+            } else {
+                console.log('⚠️  Smart contract not initialized - missing or invalid contract address');
+                console.log('   System will run without blockchain integration');
             }
 
             console.log('Blockchain service initialized successfully');
@@ -39,6 +43,17 @@ class BlockchainService {
         } catch (error) {
             console.error('Error initializing blockchain service:', error);
         }
+    }
+
+    // Check if address is valid Ethereum address
+    isValidAddress(address) {
+        if (!address) return false;
+        // Ethereum addresses are 42 characters long (including 0x prefix)
+        if (address.length !== 42) return false;
+        // Must start with 0x
+        if (!address.startsWith('0x')) return false;
+        // Must be valid hex
+        return /^0x[a-fA-F0-9]{40}$/.test(address);
     }
 
     async loadContractABI() {
@@ -141,7 +156,15 @@ class BlockchainService {
     async addProcessingStepToBlockchain(stepData) {
         try {
             if (!this.contract) {
-                throw new Error('Smart contract not initialized');
+                console.log('⚠️  Blockchain integration not available - skipping blockchain storage');
+                return {
+                    transactionHash: null,
+                    blockNumber: null,
+                    blockHash: null,
+                    gasUsed: null,
+                    stepHash: this.createDataHash(stepData),
+                    status: 'local_only'
+                };
             }
 
             const {

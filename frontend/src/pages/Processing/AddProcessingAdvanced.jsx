@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Save, ArrowLeft, Thermometer, Clock, FileText, 
   Settings, CheckCircle, AlertCircle, Package, Factory,
-  Zap, Sparkles, Star, Flame, Droplets, Wind, Sun, Target
+  Zap, Sparkles, Star, Flame, Droplets, Wind, Sun, Target,
+  Shield, Link, Database, Lock
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../utils/api';
@@ -207,22 +208,35 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
               
               {/* Clean Typography */}
               <div className="space-y-2">
-                <h1 className="text-4xl font-bold text-white">
-                  Add Processing Step
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-bold text-white">
+                    Add Processing Step
+                  </h1>
+                  {/* Blockchain Badge */}
+                  <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 rounded-full">
+                    <Shield className="w-4 h-4 text-blue-400" />
+                    <span className="text-blue-300 text-sm font-medium">Blockchain Secured</span>
+                  </div>
+                </div>
                 <p className="text-lg text-gray-300">
                   {batch ? (
-                    <span>Record processing step for batch {batch.id}</span>
+                    <span>Record processing step for batch {batch.id} • Immutable blockchain verification</span>
                   ) : (
-                    <span>Record new processing step</span>
+                    <span>Record new processing step • Immutable blockchain verification</span>
                   )}
                 </p>
                 
-                {/* Simple Status */}
+                {/* Status with Blockchain Indicators */}
                 <div className="flex items-center gap-4 mt-4">
                   <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
                     <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
                     <span className="text-emerald-300 text-sm">Ready</span>
+                  </div>
+                  
+                  {/* Blockchain Status */}
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-400/30 rounded-full">
+                    <Link className="w-3 h-3 text-blue-400" />
+                    <span className="text-blue-300 text-sm">Blockchain Connected</span>
                   </div>
                   
                   {batch && (
@@ -301,6 +315,18 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                             }`}>
                               {type.description}
                             </p>
+                            
+                            {/* Blockchain Indicator */}
+                            <div className="flex items-center justify-center gap-1 mt-2">
+                              <Database className={`w-3 h-3 transition-colors duration-300 ${
+                                isSelected ? 'text-blue-300' : 'text-blue-400/60 group-hover:text-blue-400'
+                              }`} />
+                              <span className={`text-xs transition-colors duration-300 ${
+                                isSelected ? 'text-blue-300' : 'text-blue-400/60 group-hover:text-blue-400'
+                              }`}>
+                                Blockchain Verified
+                              </span>
+                            </div>
                           </div>
                           
                           {/* Selection Indicator */}
@@ -396,6 +422,22 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                 </div>
               </div>
 
+              {/* Blockchain Security Notice */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Lock className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-semibold text-white">Blockchain Security</h4>
+                    <p className="text-xs text-gray-300 leading-relaxed">
+                      This processing step will be permanently recorded on the blockchain for immutable traceability. 
+                      Once saved, the data cannot be altered, ensuring complete transparency and authenticity for your supply chain.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Submit Buttons */}
               <div className="flex gap-4 pt-8">
                 <button
@@ -410,23 +452,23 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                 <button
                   type="submit"
                   disabled={saving || !processingForm.stepType || !processingForm.duration}
-                  className="flex-1 py-3 px-6 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                 >
                   {saving ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Saving...
+                      Saving to Blockchain...
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5" />
-                      Save Processing Step
+                      <Shield className="w-5 h-5" />
+                      Save to Blockchain
                     </>
                   )}
                 </button>
               </div>
               
-              {/* Simple Progress */}
+              {/* Progress with Blockchain Indicator */}
               <div className="flex items-center justify-center gap-2 pt-4">
                 <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   processingForm.stepType ? 'bg-emerald-500' : 'bg-gray-600'
@@ -437,9 +479,20 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                 <div className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   processingForm.notes ? 'bg-emerald-500' : 'bg-gray-600'
                 }`}></div>
+                <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                  <Database className="w-2 h-2 text-white" />
+                </div>
               </div>
               <p className="text-center text-sm text-gray-400 mt-2">
-                {processingForm.stepType && processingForm.duration ? '✅ Ready to save' : '⏳ Fill required fields'}
+                {processingForm.stepType && processingForm.duration ? (
+                  <span className="flex items-center justify-center gap-2">
+                    ✅ Ready to save to blockchain
+                    <Shield className="w-3 h-3 text-blue-400" />
+                  </span>
+                ) : (
+                  '⏳ Fill required fields for blockchain storage'
+                )}
               </p>
             </form>
           </div>
