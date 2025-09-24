@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Filter, Beaker, TestTube, CheckCircle, XCircle, Clock,
   TrendingUp, Activity, AlertCircle, FlaskConical, Microscope,
-  RefreshCw, Calendar, User, Package
+  RefreshCw, Calendar, User, Package, Plus, Upload, X, Save, 
+  Hash, Shield, Eye, Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 
-const LabDashboard = ({ user, showToast }) => {
+const LabDashboard = ({ user, showToast = console.log }) => {
   const navigate = useNavigate();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,19 +21,111 @@ const LabDashboard = ({ user, showToast }) => {
     totalFailed: 0
   });
 
+  // Add Quality Test Modal State
+  const [showAddTestModal, setShowAddTestModal] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState(null);
+  const [newTest, setNewTest] = useState({
+    testType: '',
+    resultValue: '',
+    status: 'Passed',
+    technician: user?.name || 'Dr. Sarah Wilson',
+    notes: '',
+    certificate: null
+  });
+  const [submittingTest, setSubmittingTest] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [testResults, setTestResults] = useState([]);
+
   useEffect(() => {
+    console.log('Lab Dashboard mounted, loading data...');
     loadBatches();
     loadRecentActivity();
   }, []);
 
+  // Force render with data for testing
+  useEffect(() => {
+    if (batches.length === 0 && !loading) {
+      console.log('Force loading batches...');
+      const forceBatches = [
+        {
+          id: 'COL001',
+          farmer: 'Rajesh Kumar',
+          herb: 'Ashwagandha',
+          quantity: '500kg',
+          labResults: null
+        },
+        {
+          id: 'COL002',
+          farmer: 'Priya Sharma',
+          herb: 'Turmeric',
+          quantity: '750kg',
+          labResults: null
+        }
+      ];
+      setBatches(forceBatches);
+      calculateStats(forceBatches);
+    }
+  }, [batches, loading]);
+
   const loadBatches = async () => {
     try {
       setLoading(true);
-      const data = await api.getBatches();
-      setBatches(data);
-      calculateStats(data);
+      
+      // Always use mock data for demo - ensure we have batches to test
+      const mockBatches = [
+        {
+          id: 'COL001',
+          batchId: 'BAT-2024-001',
+          farmer: 'Rajesh Kumar',
+          herb: 'Ashwagandha',
+          quantity: '500kg',
+          location: 'Kerala, India',
+          gpsCoordinates: '10.8505°N, 76.2711°E',
+          harvestDate: '2024-09-20',
+          submissionDate: '2024-09-23',
+          status: 'Verified',
+          qualityScore: 94,
+          labResults: null // Pending lab test
+        },
+        {
+          id: 'COL002',
+          batchId: 'BAT-2024-002',
+          farmer: 'Priya Sharma',
+          herb: 'Turmeric',
+          quantity: '750kg',
+          location: 'Tamil Nadu, India',
+          gpsCoordinates: '11.1271°N, 78.6569°E',
+          harvestDate: '2024-09-21',
+          submissionDate: '2024-09-24',
+          status: 'Verified',
+          qualityScore: 88,
+          labResults: null // Pending lab test
+        },
+        {
+          id: 'COL003',
+          batchId: 'BAT-2024-003',
+          farmer: 'Amit Patel',
+          herb: 'Brahmi',
+          quantity: '300kg',
+          location: 'Gujarat, India',
+          gpsCoordinates: '23.0225°N, 72.5714°E',
+          harvestDate: '2024-09-19',
+          submissionDate: '2024-09-22',
+          status: 'Verified',
+          qualityScore: 91,
+          labResults: {
+            ayushCompliance: true,
+            testDate: '2024-09-23'
+          }
+        }
+      ];
+      
+      setBatches(mockBatches);
+      calculateStats(mockBatches);
+      
     } catch (error) {
-      showToast('Failed to load batches', 'error');
+      console.error('Error loading batches:', error);
+      showToast('Using demo data - Backend not connected', 'info');
     } finally {
       setLoading(false);
     }
@@ -96,6 +189,156 @@ const LabDashboard = ({ user, showToast }) => {
     
     return matchesSearch && matchesStatus;
   });
+
+  // Test type configurations
+  const testTypes = [
+    { 
+      value: 'moisture', 
+      label: 'Moisture Content', 
+      unit: '%', 
+      icon: '💧',
+      description: 'Water content analysis'
+    },
+    { 
+      value: 'pesticide', 
+      label: 'Pesticide Screening', 
+      unit: 'ppm', 
+      icon: '🧪',
+      description: 'Chemical residue detection'
+    },
+    { 
+      value: 'dna', 
+      label: 'DNA Barcode', 
+      unit: '', 
+      icon: '🧬',
+      description: 'Species authentication'
+    },
+    { 
+      value: 'heavy_metals', 
+      label: 'Heavy Metals', 
+      unit: 'ppm', 
+      icon: '⚗️',
+      description: 'Toxic metal analysis'
+    },
+    { 
+      value: 'microbial', 
+      label: 'Microbial Testing', 
+      unit: 'CFU/g', 
+      icon: '🦠',
+      description: 'Pathogen detection'
+    }
+  ];
+
+  // Handle file upload
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+      if (!allowedTypes.includes(file.type)) {
+        showToast('Please upload PDF or image files only', 'error');
+        return;
+      }
+      
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File size must be less than 10MB', 'error');
+        return;
+      }
+
+      setNewTest(prev => ({ ...prev, certificate: file }));
+      showToast('Certificate uploaded successfully', 'success');
+    }
+  };
+
+  // Submit new test
+  const handleSubmitTest = async () => {
+    try {
+      // Validation
+      if (!newTest.testType || !newTest.resultValue) {
+        showToast('Please fill in all required fields', 'error');
+        return;
+      }
+
+      setSubmittingTest(true);
+      setUploadProgress(0);
+
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
+        });
+      }, 200);
+
+      // Get selected test type details
+      const selectedTestType = testTypes.find(t => t.value === newTest.testType);
+      
+      // Create test data
+      const testData = {
+        batchId: selectedBatch.id,
+        testType: selectedTestType.label,
+        result: `${newTest.resultValue}${selectedTestType.unit ? selectedTestType.unit : ''}`,
+        status: newTest.status,
+        technician: newTest.technician,
+        notes: newTest.notes,
+        testDate: new Date().toISOString(),
+        certificate: newTest.certificate
+      };
+
+      // Simulate API call to backend
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Simulate blockchain transaction
+      const mockTxId = `0x${Math.random().toString(16).substr(2, 32)}`;
+      
+      setUploadProgress(100);
+
+      // Add to test results
+      const newTestResult = {
+        id: testResults.length + 1,
+        batchId: selectedBatch.id,
+        testType: selectedTestType.label,
+        result: testData.result,
+        status: newTest.status,
+        testDate: new Date().toLocaleDateString(),
+        technician: newTest.technician,
+        blockchainStatus: 'On-Chain Verified ✅',
+        txId: mockTxId,
+        notes: newTest.notes
+      };
+
+      setTestResults(prev => [...prev, newTestResult]);
+      
+      // Reset form
+      setNewTest({
+        testType: '',
+        resultValue: '',
+        status: 'Passed',
+        technician: user?.name || 'Dr. Sarah Wilson',
+        notes: '',
+        certificate: null
+      });
+      
+      setShowAddTestModal(false);
+      showToast(`Test added successfully! Blockchain TX: ${mockTxId.substr(0, 10)}...`, 'success');
+
+    } catch (error) {
+      showToast('Failed to add test: ' + error.message, 'error');
+    } finally {
+      setSubmittingTest(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Open Add Test Modal
+  const openAddTestModal = (batch) => {
+    setSelectedBatch(batch);
+    setShowAddTestModal(true);
+  };
 
   const getStatusBadge = (batch) => {
     if (!batch.labResults) {
@@ -285,8 +528,7 @@ const LabDashboard = ({ user, showToast }) => {
                   filteredBatches.map((batch) => (
                     <div 
                       key={batch.id} 
-                      onClick={() => navigate(`/batch/${batch.id}`)}
-                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-200 cursor-pointer"
+                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-200"
                     >
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -301,7 +543,7 @@ const LabDashboard = ({ user, showToast }) => {
                         {getStatusBadge(batch)}
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-300">{batch.farmer}</span>
@@ -310,6 +552,27 @@ const LabDashboard = ({ user, showToast }) => {
                           <Package className="w-4 h-4 text-gray-400" />
                           <span className="text-gray-300">{batch.quantity}</span>
                         </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAddTestModal(batch);
+                          }}
+                          className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Add Quality Test
+                        </button>
+                        <button
+                          onClick={() => navigate(`/batch/${batch.id}`)}
+                          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))
@@ -358,6 +621,232 @@ const LabDashboard = ({ user, showToast }) => {
           </div>
         </div>
       </div>
+
+      {/* Add Quality Test Modal */}
+      {showAddTestModal && selectedBatch && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/50 to-blue-500/50 rounded-2xl blur"></div>
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-2xl p-8">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
+                    <TestTube className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">Add Quality Test</h3>
+                    <p className="text-gray-400">Batch: {selectedBatch.id} • {selectedBatch.herb}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowAddTestModal(false)}
+                  className="p-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-200"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Form */}
+              <div className="space-y-6">
+                
+                {/* Test Type Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Test Type <span className="text-red-400">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {testTypes.map((type) => (
+                      <button
+                        key={type.value}
+                        onClick={() => setNewTest(prev => ({ ...prev, testType: type.value }))}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                          newTest.testType === type.value
+                            ? 'border-emerald-500 bg-emerald-500/10'
+                            : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="text-2xl">{type.icon}</span>
+                          <span className="text-white font-semibold">{type.label}</span>
+                        </div>
+                        <p className="text-gray-400 text-sm">{type.description}</p>
+                        {type.unit && (
+                          <p className="text-blue-400 text-xs mt-1">Unit: {type.unit}</p>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Result Value */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Result Value <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={newTest.resultValue}
+                        onChange={(e) => setNewTest(prev => ({ ...prev, resultValue: e.target.value }))}
+                        placeholder="Enter result value"
+                        className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200"
+                      />
+                      {newTest.testType && (
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                          {testTypes.find(t => t.value === newTest.testType)?.unit}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pass/Fail Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Test Status
+                    </label>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setNewTest(prev => ({ ...prev, status: 'Passed' }))}
+                        className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${
+                          newTest.status === 'Passed'
+                            ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
+                            : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
+                        }`}
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Pass
+                      </button>
+                      <button
+                        onClick={() => setNewTest(prev => ({ ...prev, status: 'Failed' }))}
+                        className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${
+                          newTest.status === 'Failed'
+                            ? 'border-red-500 bg-red-500/20 text-red-300'
+                            : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
+                        }`}
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Fail
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technician */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Technician
+                  </label>
+                  <input
+                    type="text"
+                    value={newTest.technician}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, technician: e.target.value }))}
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200"
+                  />
+                </div>
+
+                {/* Certificate Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Test Certificate (PDF/Image)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="certificate-upload"
+                    />
+                    <label
+                      htmlFor="certificate-upload"
+                      className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-emerald-500 transition-all duration-200 bg-slate-700/20"
+                    >
+                      <div className="text-center">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        {newTest.certificate ? (
+                          <div>
+                            <p className="text-emerald-400 font-medium">{newTest.certificate.name}</p>
+                            <p className="text-gray-400 text-sm">
+                              {(newTest.certificate.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-gray-300">Click to upload certificate</p>
+                            <p className="text-gray-400 text-sm">PDF, JPG, PNG up to 10MB</p>
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={newTest.notes}
+                    onChange={(e) => setNewTest(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Additional notes about the test..."
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 resize-none"
+                  />
+                </div>
+
+                {/* Progress Bar */}
+                {submittingTest && (
+                  <div className="bg-slate-700/50 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <TestTube className="w-5 h-5 text-blue-400 animate-pulse" />
+                      <span className="text-white font-medium">Processing Test & Blockchain Verification...</span>
+                    </div>
+                    <div className="w-full bg-slate-600 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${uploadProgress}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-gray-400 text-sm mt-2">{uploadProgress}% Complete</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-4 mt-8">
+                <button
+                  onClick={() => setShowAddTestModal(false)}
+                  disabled={submittingTest}
+                  className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all duration-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitTest}
+                  disabled={submittingTest || !newTest.testType || !newTest.resultValue}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {submittingTest ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      Add Test & Verify on Blockchain
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

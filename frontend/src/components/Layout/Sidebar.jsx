@@ -39,7 +39,7 @@ const Sidebar = ({ user }) => {
       ],
       'Lab Tester': [
         { path: '/batches', icon: Package, label: strings.nav.batches },
-        { path: '/reports', icon: Beaker, label: strings.nav.labTesting }
+        { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [
         { path: '/reports', icon: Shield, label: 'Certifications' }

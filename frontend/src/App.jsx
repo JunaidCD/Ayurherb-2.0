@@ -9,6 +9,9 @@ import CustomerPortal from './pages/Customer/CustomerPortal';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
+import TestBatches from './pages/TestBatches';
+import TestLabDashboard from './pages/TestLabDashboard';
+import LabTest from './pages/LabTest/LabTest';
 import BatchDetails from './pages/Lab/BatchDetails';
 import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
 import Toast from './components/UI/Toast';
@@ -126,6 +129,19 @@ function App() {
           />
           
           <Route 
+            path="/lab-test" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <LabTest user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
             path="/batch/:batchId" 
             element={
               user ? (
@@ -149,6 +165,20 @@ function App() {
                 <Navigate to="/login" />
               )
             } 
+          />
+          
+          {/* Test routes - no auth required */}
+          <Route 
+            path="/test-batches" 
+            element={<TestBatches />} 
+          />
+          <Route 
+            path="/test-lab" 
+            element={<TestLabDashboard />} 
+          />
+          <Route 
+            path="/test-lab-test" 
+            element={<LabTest user={{name: 'Dr. Sarah Wilson', role: 'Lab Tester'}} showToast={console.log} />} 
           />
           
           {/* Public customer portal route */}
