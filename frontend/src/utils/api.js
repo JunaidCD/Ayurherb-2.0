@@ -96,6 +96,28 @@ let mockCollections = [
     location: 'Gujarat, India',
     qualityGrade: 'Standard (A)',
     qualityAssessment: 'Standard (A)'
+  },
+  {
+    id: 'COL004',
+    batchId: 'BAT-2025-011',
+    collectorId: 'COL-102',
+    farmer: 'COL-102',
+    herb: 'Ashwagandha',
+    speciesName: 'Ashwagandha',
+    quantity: '12 kg',
+    weight: '12 kg',
+    moisture: '9%',
+    gpsCoordinates: '18.9123°, 77.5123°',
+    latitude: '18.9123°',
+    longitude: '77.5123°',
+    accuracy: '±89 meters',
+    collectionTime: '9/21/2025, 10:12:00 AM',
+    submissionDate: '2025-09-21',
+    timestamp: '9/21/2025, 10:12:00 AM',
+    status: 'Verified',
+    location: '18.9123°, 77.5123° (Protected forest)',
+    qualityGrade: 'Premium (AA)',
+    qualityAssessment: 'Premium (AA)'
   }
 ];
 

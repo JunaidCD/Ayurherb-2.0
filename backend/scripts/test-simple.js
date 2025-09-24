@@ -50,10 +50,27 @@ async function testSimpleSystem() {
             console.log('❌ BAT 2024 002 - Error:', error.response?.data?.message || error.message);
         }
 
-        // Test 3: Invalid batch (should fail)
-        console.log('\n3. Testing BAT 2024 003 (should fail)...');
+        // Test 3: Protected forest batch (should fail with zone error)
+        console.log('\n3. Testing BAT-2025-011 (should fail - protected zone)...');
         try {
             const response3 = await axios.post('http://localhost:3001/api/v1/processing-steps', {
+                batchId: 'BAT-2025-011',
+                processorId: 'PROC001',
+                stepType: 'Drying',
+                temperature: 50,
+                duration: 90,
+                notes: 'Test protected forest batch'
+            });
+            
+            console.log('❌ BAT-2025-011 - Should have failed but succeeded');
+        } catch (error) {
+            console.log('✅ BAT-2025-011 - Correctly failed:', error.response?.data?.error || error.message);
+        }
+
+        // Test 4: Invalid batch (should fail)
+        console.log('\n4. Testing BAT 2024 003 (should fail - not found)...');
+        try {
+            const response4 = await axios.post('http://localhost:3001/api/v1/processing-steps', {
                 batchId: 'BAT 2024 003',
                 processorId: 'PROC001',
                 stepType: 'Drying',
@@ -64,13 +81,14 @@ async function testSimpleSystem() {
             
             console.log('❌ BAT 2024 003 - Should have failed but succeeded');
         } catch (error) {
-            console.log('✅ BAT 2024 003 - Correctly failed:', error.response?.data?.message || error.message);
+            console.log('✅ BAT 2024 003 - Correctly failed:', error.response?.data?.error || error.message);
         }
 
         console.log('\n🎯 Test Summary:');
         console.log('- BAT 2024 001 (Ashwagandha): Should save to blockchain ✅');
         console.log('- BAT 2024 002 (Turmeric): Should save to blockchain ✅');
-        console.log('- BAT 2024 003 (Invalid): Should show error message ✅');
+        console.log('- BAT-2025-011 (Protected forest): Should show "harvesting zone" error ❌');
+        console.log('- BAT 2024 003 (Invalid): Should show "not found" error ❌');
 
     } catch (error) {
         console.error('❌ Test failed:', error.message);

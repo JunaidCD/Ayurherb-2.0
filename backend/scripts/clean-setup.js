@@ -80,10 +80,24 @@ async function cleanSetup() {
             status: 'verified'
         });
 
+        console.log('📦 Adding BAT-2025-011...');
+        await database.addBatch({
+            id: 'BAT-2025-011',
+            herb_type: 'Ashwagandha',
+            farmer_id: 'FARM003',
+            farmer_name: 'COL-102',
+            origin_location: '18.9123°, 77.5123° (Protected forest)',
+            harvest_date: '2025-09-21',
+            quantity: 12.0,
+            quality_grade: 'Premium',
+            status: 'verified'
+        });
+
         console.log('✅ Clean setup completed successfully!');
         console.log('\n📋 Available batches:');
         console.log('- BAT 2024 001: Ashwagandha (5kg) - Rajesh Kumar');
         console.log('- BAT 2024 002: Turmeric (7kg) - Priya Sharma');
+        console.log('- BAT-2025-011: Ashwagandha (12kg) - COL-102');
         console.log('\n🎯 System ready for blockchain processing!');
 
         database.close();

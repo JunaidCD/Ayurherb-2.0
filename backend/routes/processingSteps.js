@@ -68,6 +68,14 @@ router.post('/', upload.single('certificate'), async (req, res) => {
             });
         }
 
+        // Check if batch is from protected/restricted area
+        if (batch.origin_location && batch.origin_location.includes('Protected forest')) {
+            return res.status(400).json({
+                error: 'Collected outside the approved harvesting zone.',
+                details: 'This batch was collected from a protected forest area and cannot be processed.'
+            });
+        }
+
         let filePath = null;
         let fileHash = null;
 
