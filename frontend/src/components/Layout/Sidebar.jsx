@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Package, 
+  Package,
   Settings, 
   Database,
   Beaker,
@@ -34,11 +34,10 @@ const Sidebar = ({ user }) => {
         { path: '/settings', icon: Settings, label: strings.nav.settings }
       ],
       'Processor': [
-        { path: '/batches', icon: Package, label: strings.nav.batches },
+        { path: '/batches', icon: Package, label: 'Batches' },
         { path: '/add-processing', icon: Plus, label: 'Add Processing' }
       ],
       'Lab Tester': [
-        { path: '/batches', icon: Package, label: strings.nav.batches },
         { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [
