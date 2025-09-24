@@ -404,18 +404,11 @@ const Batches = ({ user, showToast = console.log }) => {
                 <RefreshCw className="w-5 h-5 text-white" />
               </button>
               <button
-                onClick={() => setShowAddTestModal(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
-              >
-                <Plus className="w-5 h-5" />
-                Quick Test
-              </button>
-              <button
-                onClick={() => navigate('/lab-test')}
+                onClick={() => navigate('/add-processing')}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
-                <TestTube className="w-5 h-5" />
-                Lab Test Page
+                <Factory className="w-5 h-5" />
+                Add Processing
               </button>
             </div>
           </div>
@@ -626,11 +619,11 @@ const Batches = ({ user, showToast = console.log }) => {
               
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/lab-test')}
+                  onClick={() => navigate('/add-processing')}
                   className="w-full p-4 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-3"
                 >
-                  <Plus className="w-5 h-5" />
-                  Add New Test
+                  <Factory className="w-5 h-5" />
+                  Add Processing
                 </button>
                 
                 <button className="w-full p-4 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-3">

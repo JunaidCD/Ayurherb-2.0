@@ -178,98 +178,6 @@ export const sharedStorage = {
           qualityGrade: 'Standard (A)',
           qualityAssessment: 'Standard (A)',
           createdAt: new Date().toISOString()
-        },
-        {
-          id: 'COL003',
-          batchId: 'BAT 2024 003',
-          collectorId: 'Rajesh Kumar',
-          farmer: 'Rajesh Kumar',
-          herb: 'Ashwagandha',
-          speciesName: 'Ashwagandha',
-          quantity: '3.5 kg',
-          weight: '3.5 kg',
-          moisture: '25%',
-          gpsCoordinates: '10.8505°, 76.2711°',
-          latitude: '10.8505°',
-          longitude: '76.2711°',
-          accuracy: '±45 meters',
-          collectionTime: '9/22/2025, 2:30:15 PM',
-          submissionDate: '2025-09-22',
-          timestamp: '9/22/2025, 2:30:15 PM',
-          status: 'Synced',
-          location: 'Kerala, India',
-          qualityGrade: 'Premium (AA)',
-          qualityAssessment: 'Premium (AA)',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'COL004',
-          batchId: 'BAT 2024 004',
-          collectorId: 'Priya Sharma',
-          farmer: 'Priya Sharma',
-          herb: 'Turmeric',
-          speciesName: 'Turmeric',
-          quantity: '7 kg',
-          weight: '7 kg',
-          moisture: '35%',
-          gpsCoordinates: '11.1271°, 78.6569°',
-          latitude: '11.1271°',
-          longitude: '78.6569°',
-          accuracy: '±120 meters',
-          collectionTime: '9/20/2025, 11:45:22 AM',
-          submissionDate: '2025-09-20',
-          timestamp: '9/20/2025, 11:45:22 AM',
-          status: 'Synced',
-          location: 'Tamil Nadu, India',
-          qualityGrade: 'Standard (A)',
-          qualityAssessment: 'Standard (A)',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'COL005',
-          batchId: 'BAT 2024 005',
-          collectorId: 'Amit Singh',
-          farmer: 'Amit Singh',
-          herb: 'Neem',
-          speciesName: 'Neem',
-          quantity: '4.2 kg',
-          weight: '4.2 kg',
-          moisture: '28%',
-          gpsCoordinates: '26.9124°, 75.7873°',
-          latitude: '26.9124°',
-          longitude: '75.7873°',
-          accuracy: '±85 meters',
-          collectionTime: '9/19/2025, 4:20:10 PM',
-          submissionDate: '2025-09-19',
-          timestamp: '9/19/2025, 4:20:10 PM',
-          status: 'Synced',
-          location: 'Rajasthan, India',
-          qualityGrade: 'Standard (A)',
-          qualityAssessment: 'Standard (A)',
-          createdAt: new Date().toISOString()
-        },
-        {
-          id: 'COL006',
-          batchId: 'BAT 2024 006',
-          collectorId: 'Sunita Devi',
-          farmer: 'Sunita Devi',
-          herb: 'Tulsi',
-          speciesName: 'Tulsi',
-          quantity: '1.8 kg',
-          weight: '1.8 kg',
-          moisture: '22%',
-          gpsCoordinates: '25.5941°, 85.1376°',
-          latitude: '25.5941°',
-          longitude: '85.1376°',
-          accuracy: '±95 meters',
-          collectionTime: '9/18/2025, 9:15:45 AM',
-          submissionDate: '2025-09-18',
-          timestamp: '9/18/2025, 9:15:45 AM',
-          status: 'Synced',
-          location: 'Bihar, India',
-          qualityGrade: 'Premium (AA)',
-          qualityAssessment: 'Premium (AA)',
-          createdAt: new Date().toISOString()
         }
       ];
       
@@ -317,6 +225,8 @@ const convertCollectionToBatch = (collection) => {
 };
 
 // Initialize storage on module load
+// Clear existing data first to apply new configuration
+sharedStorage.clearAllData();
 sharedStorage.initialize();
 
 export default sharedStorage;
