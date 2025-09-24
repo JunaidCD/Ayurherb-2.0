@@ -2,36 +2,41 @@ import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, MapPin, User, Calendar, Package, Beaker, TestTube, 
   Plus, CheckCircle, XCircle, Clock, Microscope, FlaskConical,
-  FileText, Download, Eye, Activity, Leaf, Factory, RefreshCw
+  FileText, Download, Eye, Activity, Leaf, Factory
 } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
 
-const Batches = ({ user, showToast }) => {
+const BatchDetails = ({ user, showToast }) => {
+  const { batchId } = useParams();
+  const navigate = useNavigate();
   const [batch, setBatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [testResults, setTestResults] = useState([]);
   const [showAddTestModal, setShowAddTestModal] = useState(false);
 
   useEffect(() => {
-    loadBatchDetails();
-    loadTestResults();
-  }, []);
+    if (batchId) {
+      loadBatchDetails();
+      loadTestResults();
+    }
+  }, [batchId]);
 
   const loadBatchDetails = async () => {
     try {
       setLoading(true);
-      const data = await api.getBatches();
-      if (data.length > 0) {
-        setBatch(data[0]);
-      }
+      const data = await api.getBatchById(batchId);
+      setBatch(data);
     } catch (error) {
       showToast('Failed to load batch details', 'error');
+      navigate('/lab-testing');
     } finally {
       setLoading(false);
     }
   };
 
   const loadTestResults = () => {
+    // Mock test results data
     setTestResults([
       {
         id: 1,
@@ -39,7 +44,9 @@ const Batches = ({ user, showToast }) => {
         result: '8.5%',
         status: 'Passed',
         testDate: '2024-09-23',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'Gravimetric Analysis',
+        notes: 'Within acceptable range'
       },
       {
         id: 2,
@@ -47,7 +54,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Not Detected',
         status: 'Passed',
         testDate: '2024-09-23',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'LC-MS/MS',
+        notes: 'All compounds below detection limit'
       },
       {
         id: 3,
@@ -55,7 +64,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Confirmed',
         status: 'Passed',
         testDate: '2024-09-22',
-        technician: 'Dr. Mike Chen'
+        technician: 'Dr. Mike Chen',
+        method: 'PCR Analysis',
+        notes: 'Species identity verified'
       },
       {
         id: 4,
@@ -63,7 +74,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Pending',
         status: 'In Progress',
         testDate: '2024-09-24',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'ICP-MS',
+        notes: 'Analysis in progress'
       }
     ]);
   };
@@ -117,7 +130,7 @@ const Batches = ({ user, showToast }) => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
           <Beaker className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">No batch data available</p>
+          <p className="text-gray-400 text-lg">Batch not found</p>
         </div>
       </div>
     );
@@ -131,6 +144,13 @@ const Batches = ({ user, showToast }) => {
         <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-3xl p-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
+              <button
+                onClick={() => navigate('/lab-testing')}
+                className="p-3 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 rounded-xl transition-all duration-200"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
+              
               <div className="relative">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-2xl blur opacity-60"></div>
                 <div className="relative w-16 h-16 bg-gradient-to-br from-blue-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-2xl">
@@ -155,12 +175,6 @@ const Batches = ({ user, showToast }) => {
             </div>
             
             <div className="flex items-center gap-4">
-              <button 
-                onClick={loadBatchDetails}
-                className="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-200"
-              >
-                <RefreshCw className="w-5 h-5 text-white" />
-              </button>
               <button
                 onClick={() => setShowAddTestModal(true)}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
@@ -363,6 +377,11 @@ const Batches = ({ user, showToast }) => {
                   <FileText className="w-5 h-5" />
                   Generate Report
                 </button>
+                
+                <button className="w-full p-4 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Export Data
+                </button>
               </div>
             </div>
           </div>
@@ -383,6 +402,10 @@ const Batches = ({ user, showToast }) => {
                   <span className="text-emerald-400 font-semibold">{testResults.filter(t => t.status === 'Passed').length}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-400">In Progress</span>
+                  <span className="text-yellow-400 font-semibold">{testResults.filter(t => t.status === 'In Progress').length}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-400">Quality Score</span>
                   <span className="text-white font-semibold">{batch.qualityScore || 94}%</span>
                 </div>
@@ -391,50 +414,8 @@ const Batches = ({ user, showToast }) => {
           </div>
         </div>
       </div>
-
-      {/* Add Test Modal */}
-      {showAddTestModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/50 to-blue-500/50 rounded-2xl blur"></div>
-            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-2xl p-8 max-w-md mx-4">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <TestTube className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Add New Test</h3>
-                  <p className="text-gray-400">Add test for {batch?.id}</p>
-                </div>
-              </div>
-              
-              <p className="text-gray-300 mb-6">
-                Test form functionality will be implemented here.
-              </p>
-              
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowAddTestModal(false)}
-                  className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setShowAddTestModal(false);
-                    showToast('Test form will be implemented', 'info');
-                  }}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200"
-                >
-                  Add Test
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default Batches;
+export default BatchDetails;

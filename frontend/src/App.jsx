@@ -9,6 +9,7 @@ import CustomerPortal from './pages/Customer/CustomerPortal';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
+import BatchDetails from './pages/Lab/BatchDetails';
 import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
 import Toast from './components/UI/Toast';
 
@@ -117,6 +118,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <Batches user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/batch/:batchId" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <BatchDetails user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />

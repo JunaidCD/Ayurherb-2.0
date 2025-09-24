@@ -409,6 +409,18 @@ export const api = {
       fileName: file.name,
       fileSize: file.size
     };
+  },
+
+  // Clear all batches/collections
+  clearAllBatches: async () => {
+    await delay(500);
+    const success = sharedStorage.clearAllData();
+    if (!success) throw new Error('Failed to clear data');
+    
+    return {
+      success: true,
+      message: 'All batches cleared successfully'
+    };
   }
 };
 

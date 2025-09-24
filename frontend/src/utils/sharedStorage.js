@@ -89,6 +89,27 @@ export const sharedStorage = {
       .map(convertCollectionToBatch);
   },
 
+  // Clear all data
+  clearAllData: () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.COLLECTIONS);
+      localStorage.removeItem(STORAGE_KEYS.BATCHES);
+      localStorage.removeItem(STORAGE_KEYS.LAST_UPDATE);
+      
+      // Trigger storage event for other tabs
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: STORAGE_KEYS.COLLECTIONS,
+        newValue: null,
+        storageArea: localStorage
+      }));
+      
+      return true;
+    } catch (error) {
+      console.error('Error clearing storage:', error);
+      return false;
+    }
+  },
+
   // Storage event listeners
   addStorageListener: (callback) => {
     storageListeners.add(callback);

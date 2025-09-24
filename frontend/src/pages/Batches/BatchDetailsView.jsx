@@ -20,9 +20,10 @@ const Batches = ({ user, showToast }) => {
   const loadBatchDetails = async () => {
     try {
       setLoading(true);
-      const data = await api.getBatches();
-      if (data.length > 0) {
-        setBatch(data[0]);
+      // Get the first batch as example
+      const batches = await api.getBatches();
+      if (batches.length > 0) {
+        setBatch(batches[0]);
       }
     } catch (error) {
       showToast('Failed to load batch details', 'error');
@@ -32,6 +33,7 @@ const Batches = ({ user, showToast }) => {
   };
 
   const loadTestResults = () => {
+    // Mock test results data
     setTestResults([
       {
         id: 1,
@@ -39,7 +41,9 @@ const Batches = ({ user, showToast }) => {
         result: '8.5%',
         status: 'Passed',
         testDate: '2024-09-23',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'Gravimetric Analysis',
+        notes: 'Within acceptable range'
       },
       {
         id: 2,
@@ -47,7 +51,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Not Detected',
         status: 'Passed',
         testDate: '2024-09-23',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'LC-MS/MS',
+        notes: 'All compounds below detection limit'
       },
       {
         id: 3,
@@ -55,7 +61,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Confirmed',
         status: 'Passed',
         testDate: '2024-09-22',
-        technician: 'Dr. Mike Chen'
+        technician: 'Dr. Mike Chen',
+        method: 'PCR Analysis',
+        notes: 'Species identity verified'
       },
       {
         id: 4,
@@ -63,7 +71,9 @@ const Batches = ({ user, showToast }) => {
         result: 'Pending',
         status: 'In Progress',
         testDate: '2024-09-24',
-        technician: 'Dr. Sarah Wilson'
+        technician: 'Dr. Sarah Wilson',
+        method: 'ICP-MS',
+        notes: 'Analysis in progress'
       }
     ]);
   };
@@ -117,7 +127,7 @@ const Batches = ({ user, showToast }) => {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black flex items-center justify-center">
         <div className="text-center">
           <Beaker className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">No batch data available</p>
+          <p className="text-gray-400 text-lg">Batch not found</p>
         </div>
       </div>
     );
@@ -363,6 +373,11 @@ const Batches = ({ user, showToast }) => {
                   <FileText className="w-5 h-5" />
                   Generate Report
                 </button>
+                
+                <button className="w-full p-4 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-white font-medium rounded-xl transition-all duration-200 flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  Export Data
+                </button>
               </div>
             </div>
           </div>
@@ -381,6 +396,10 @@ const Batches = ({ user, showToast }) => {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Passed</span>
                   <span className="text-emerald-400 font-semibold">{testResults.filter(t => t.status === 'Passed').length}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">In Progress</span>
+                  <span className="text-yellow-400 font-semibold">{testResults.filter(t => t.status === 'In Progress').length}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Quality Score</span>
