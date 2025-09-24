@@ -404,7 +404,7 @@ const Batches = ({ user, showToast = console.log }) => {
                 <RefreshCw className="w-5 h-5 text-white" />
               </button>
               <button
-                onClick={() => navigate('/add-processing')}
+                onClick={() => navigate(`/add-processing/${batch?.id || 'COL001'}`)}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
               >
                 <Factory className="w-5 h-5" />
@@ -619,7 +619,7 @@ const Batches = ({ user, showToast = console.log }) => {
               
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate('/add-processing')}
+                  onClick={() => navigate(`/add-processing/${batch?.id || 'COL001'}`)}
                   className="w-full p-4 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-3"
                 >
                   <Factory className="w-5 h-5" />

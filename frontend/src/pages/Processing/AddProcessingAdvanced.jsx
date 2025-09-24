@@ -3,7 +3,7 @@ import {
   Plus, Save, ArrowLeft, Thermometer, Clock, FileText, 
   Settings, CheckCircle, AlertCircle, Package, Factory,
   Zap, Sparkles, Star, Flame, Droplets, Wind, Sun, Target,
-  Shield, Link, Database, Lock
+  Shield, Link, Database, Lock, Search
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../utils/api';
@@ -14,6 +14,8 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
   const [batch, setBatch] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
   const [processingForm, setProcessingForm] = useState({
     stepType: '',
     temperature: '',
@@ -94,6 +96,8 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
     if (batchId) {
       loadBatch();
     } else {
+      // Don't set a default batch - let user search for one
+      setBatch(null);
       setLoading(false);
     }
   }, [batchId]);
@@ -119,8 +123,32 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
     }));
   };
 
+  const handleSearchBatch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      showToast('Please enter a Batch ID to search', 'error');
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const batchData = await api.getBatchById(searchQuery.trim());
+      setBatch(batchData);
+      showToast(`Batch ${batchData.batchId || batchData.id} loaded successfully`, 'success');
+    } catch (error) {
+      showToast(`Batch "${searchQuery}" not found`, 'error');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!batch) {
+      showToast('Please search and select a batch first', 'error');
+      return;
+    }
     
     if (!processingForm.stepType || !processingForm.duration) {
       showToast('Please fill in all required fields', 'error');
@@ -219,11 +247,7 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                   </div>
                 </div>
                 <p className="text-lg text-gray-300">
-                  {batch ? (
-                    <span>Record processing step for batch {batch.id} • Immutable blockchain verification</span>
-                  ) : (
-                    <span>Record new processing step • Immutable blockchain verification</span>
-                  )}
+                  Choose the type of processing operation to perform
                 </p>
                 
                 {/* Status with Blockchain Indicators */}
@@ -239,15 +263,81 @@ const AddProcessingAdvanced = ({ user, showToast }) => {
                     <span className="text-blue-300 text-sm">Blockchain Connected</span>
                   </div>
                   
-                  {batch && (
-                    <div className="flex items-center gap-2 text-gray-400 text-sm">
-                      <Package className="w-4 h-4" />
-                      <span>{batch.herb} • {batch.weight}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-xl flex items-center justify-center">
+                  <Search className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Search Batch</h3>
+                  <p className="text-sm text-gray-400">Enter Batch ID to load specific batch</p>
+                </div>
+              </div>
+              
+              <div className="flex-1 max-w-md ml-auto">
+                <form onSubmit={handleSearchBatch} className="flex gap-3">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Enter Batch ID (e.g., COL001, BAT-2024-001)"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 pr-12"
+                    />
+                    <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={searchLoading || !searchQuery.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {searchLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4" />
+                        Search
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+            
+            {/* Current Batch Display */}
+            {batch ? (
+              <div className="mt-4 pt-4 border-t border-slate-600/50">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span className="text-emerald-300 text-sm font-medium">Batch Loaded</span>
+                  </div>
+                  <div className="text-white">
+                    <span className="font-semibold">{batch.batchId || batch.id}</span>
+                    <span className="text-gray-400 ml-2">• {batch.herb} • {batch.farmer}</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 pt-4 border-t border-slate-600/50">
+                <div className="flex items-center gap-3 text-gray-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-sm">No batch selected. Please search for a batch to continue.</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
