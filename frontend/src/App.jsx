@@ -6,6 +6,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import ProcessorDashboard from './pages/Processor/ProcessorDashboard';
 import LabDashboard from './pages/Lab/LabDashboard';
 import CustomerPortal from './pages/Customer/CustomerPortal';
+import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
@@ -59,7 +60,7 @@ function App() {
       case 'Lab Tester':
         return <LabDashboard user={user} showToast={showToast} />;
       case 'Customer':
-        return <Navigate to="/view-product" />;
+        return <CustomerDashboard user={user} showToast={showToast} />;
       default:
         return <Navigate to="/login" />;
     }

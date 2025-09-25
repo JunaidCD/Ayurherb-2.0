@@ -25,7 +25,7 @@ const Sidebar = ({ user }) => {
         path: '/dashboard', 
         icon: LayoutDashboard, 
         label: strings.nav.dashboard,
-        roles: ['Admin', 'Processor', 'Lab Tester']
+        roles: ['Admin', 'Processor', 'Lab Tester', 'Customer']
       }
     ];
 
