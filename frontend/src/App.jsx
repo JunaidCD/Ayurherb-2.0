@@ -15,6 +15,7 @@ import LabTest from './pages/LabTest/LabTest';
 import SeeItem from './pages/SeeItem/SeeItem';
 import BatchDetails from './pages/Lab/BatchDetails';
 import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
+import VerificationReport from './pages/VerificationReport/VerificationReport';
 import Toast from './components/UI/Toast';
 
 function App() {
@@ -109,6 +110,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <Settings user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/verification-report" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <VerificationReport user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />

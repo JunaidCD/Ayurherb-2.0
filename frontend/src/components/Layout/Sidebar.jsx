@@ -10,7 +10,8 @@ import {
   Users,
   Shield,
   Plus,
-  Eye
+  Eye,
+  FileCheck
 } from 'lucide-react';
 import { strings } from '../../utils/strings';
 
@@ -30,6 +31,7 @@ const Sidebar = ({ user }) => {
     const roleSpecificItems = {
       'Admin': [
         { path: '/collections', icon: Database, label: strings.nav.collections },
+        { path: '/verification-report', icon: FileCheck, label: 'Verification & Report' },
         { path: '/settings', icon: Settings, label: strings.nav.settings }
       ],
       'Processor': [
