@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, TestTube, AlertCircle, Eye, Sparkles, Download } from 'lucide-react';
+import { Package, TestTube, AlertCircle, Eye, Sparkles, Download, Calendar, BarChart3, CheckCircle, Clock } from 'lucide-react';
 
 const SeeItem = () => {
   const [testedItems, setTestedItems] = useState([]);
@@ -133,14 +133,16 @@ const SeeItem = () => {
           </div>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div>
+          {/* Page Title */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-2">Tested Items</h2>
             <p className="text-gray-400">Items that have completed lab testing</p>
           </div>
-          
-          {/* Static Test Result Card - Left Aligned */}
-          <div className="max-w-md">
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Test Result Card */}
+          <div className="lg:col-span-1">
             <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl p-6 hover:border-slate-500/70 transition-all duration-300">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -197,6 +199,155 @@ const SeeItem = () => {
               </div>
             </div>
           </div>
+
+          {/* Middle Column - Test History */}
+          <div className="lg:col-span-1">
+            <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl p-6 h-full">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-400" />
+                Test History - Last 30 Days
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-sm font-medium text-white">BAT 2024 001</div>
+                    <div className="text-xs text-slate-400">Allovera - Pesticide Screening</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-emerald-400">Passed</div>
+                    <div className="text-xs text-slate-400">Sep 25</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-sm font-medium text-white">BAT 2024 002</div>
+                    <div className="text-xs text-slate-400">Turmeric - Heavy Metal Test</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-emerald-400">Passed</div>
+                    <div className="text-xs text-slate-400">Sep 23</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-sm font-medium text-white">BAT 2024 003</div>
+                    <div className="text-xs text-slate-400">Ashwagandha - Moisture Content</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-yellow-400">Pending</div>
+                    <div className="text-xs text-slate-400">Sep 22</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-sm font-medium text-white">BAT 2024 004</div>
+                    <div className="text-xs text-slate-400">Neem - Microbial Test</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-emerald-400">Passed</div>
+                    <div className="text-xs text-slate-400">Sep 20</div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+                  <div>
+                    <div className="text-sm font-medium text-white">BAT 2024 005</div>
+                    <div className="text-xs text-slate-400">Brahmi - Pesticide Screening</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-red-400">Failed</div>
+                    <div className="text-xs text-slate-400">Sep 18</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Statistics and Activity */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Test Statistics */}
+            <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-purple-400" />
+                Test Statistics
+              </h3>
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="p-3 bg-slate-700/50 rounded-lg text-center">
+                  <div className="text-lg font-bold text-white">47</div>
+                  <div className="text-xs text-slate-400">Total Tests</div>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg text-center">
+                  <div className="text-lg font-bold text-emerald-400">42</div>
+                  <div className="text-xs text-slate-400">Passed</div>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg text-center">
+                  <div className="text-lg font-bold text-red-400">3</div>
+                  <div className="text-xs text-slate-400">Failed</div>
+                </div>
+                <div className="p-3 bg-slate-700/50 rounded-lg text-center">
+                  <div className="text-lg font-bold text-yellow-400">2</div>
+                  <div className="text-xs text-slate-400">Pending</div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-300">Success Rate</span>
+                  <span className="text-sm font-medium text-emerald-400">89.4%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-300">Avg. Processing Time</span>
+                  <span className="text-sm font-medium text-white">2.3 days</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-300">Most Tested Herb</span>
+                  <span className="text-sm font-medium text-blue-400">Ashwagandha</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-300">This Month</span>
+                  <span className="text-sm font-medium text-white">12 Tests</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-emerald-400" />
+                Recent Activity
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Test completed for BAT 2024 001</div>
+                    <div className="text-xs text-slate-400">2 minutes ago</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Blockchain verification successful</div>
+                    <div className="text-xs text-slate-400">5 minutes ago</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">New batch BAT 2024 006 received</div>
+                    <div className="text-xs text-slate-400">1 hour ago</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                  <div className="flex-1">
+                    <div className="text-sm text-white">Quality report generated</div>
+                    <div className="text-xs text-slate-400">3 hours ago</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
       )}
     </div>
