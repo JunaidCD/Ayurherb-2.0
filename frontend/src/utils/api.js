@@ -36,8 +36,8 @@ let mockCollections = [
     batchId: 'BAT 2024 001',
     collectorId: 'COL 2024',
     farmer: 'COL 2024',
-    herb: 'Brahmi',
-    speciesName: 'Brahmi',
+    herb: 'Allovera',
+    speciesName: 'Allovera',
     quantity: '5 kg',
     weight: '5 kg',
     moisture: '20%',
@@ -55,7 +55,7 @@ let mockCollections = [
   },
   {
     id: 'COL002',
-    batchId: 'BAT 2024 002',
+    batchId: 'BAT 2024 003',
     collectorId: 'COL 2024',
     farmer: 'Rajesh Kumar',
     herb: 'Ashwagandha',
@@ -77,7 +77,7 @@ let mockCollections = [
   },
   {
     id: 'COL003',
-    batchId: 'BAT 2024 003',
+    batchId: 'BAT 2024 004',
     collectorId: 'COL 2024',
     farmer: 'Suresh Patel',
     herb: 'Brahmi',
