@@ -57,7 +57,7 @@ async function cleanSetup() {
         console.log('📦 Adding BAT 2024 001...');
         await database.addBatch({
             id: 'BAT 2024 001',
-            herb_type: 'Ashwagandha',
+            herb_type: 'Allovera',
             farmer_id: 'FARM001',
             farmer_name: 'Rajesh Kumar',
             origin_location: 'Kerala, India',
@@ -95,7 +95,7 @@ async function cleanSetup() {
 
         console.log('✅ Clean setup completed successfully!');
         console.log('\n📋 Available batches:');
-        console.log('- BAT 2024 001: Ashwagandha (5kg) - Rajesh Kumar');
+        console.log('- BAT 2024 001: Allovera (5kg) - Rajesh Kumar');
         console.log('- BAT 2024 002: Turmeric (7kg) - Priya Sharma');
         console.log('- BAT-2025-011: Ashwagandha (12kg) - COL-102');
         console.log('\n🎯 System ready for blockchain processing!');

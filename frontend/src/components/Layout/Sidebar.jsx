@@ -10,7 +10,8 @@ import {
   Leaf,
   Users,
   Shield,
-  Plus
+  Plus,
+  Eye
 } from 'lucide-react';
 import { strings } from '../../utils/strings';
 
@@ -38,6 +39,7 @@ const Sidebar = ({ user }) => {
         { path: '/add-processing', icon: Plus, label: 'Add Processing' }
       ],
       'Lab Tester': [
+        { path: '/see-item', icon: Eye, label: 'See Item' },
         { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [

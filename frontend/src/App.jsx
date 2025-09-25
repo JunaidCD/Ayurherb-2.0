@@ -12,6 +12,7 @@ import Batches from './pages/Batches/Batches';
 import TestBatches from './pages/TestBatches';
 import TestLabDashboard from './pages/TestLabDashboard';
 import LabTest from './pages/LabTest/LabTest';
+import SeeItem from './pages/SeeItem/SeeItem';
 import BatchDetails from './pages/Lab/BatchDetails';
 import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
 import Toast from './components/UI/Toast';
@@ -121,6 +122,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <Batches user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/see-item" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <SeeItem user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />
