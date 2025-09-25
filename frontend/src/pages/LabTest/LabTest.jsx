@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   TestTube, Beaker, FlaskConical, Microscope, Upload, Save, 
   CheckCircle, XCircle, Clock, Hash, Shield, Eye, Download,
-  Plus, RefreshCw, AlertCircle, FileText, Activity
+  Plus, RefreshCw, AlertCircle, FileText, Activity, Search
 } from 'lucide-react';
 import { api } from '../../utils/api';
 
@@ -11,6 +11,8 @@ const LabTest = ({ user, showToast = console.log }) => {
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [testResults, setTestResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
   
   // Test form state
   const [newTest, setNewTest] = useState({
@@ -33,8 +35,18 @@ const LabTest = ({ user, showToast = console.log }) => {
     try {
       setLoading(true);
       
-      // Mock batches for testing
+      // Mock batches for testing - including BAT 2024 001
       const mockBatches = [
+        {
+          id: 'BAT 2024 001',
+          batchId: 'BAT 2024 001',
+          farmer: 'COL 2024',
+          herb: 'Allovera',
+          quantity: '5kg',
+          location: 'Bangalore, Karnataka',
+          harvestDate: '2024-09-24',
+          status: 'Ready for Testing'
+        },
         {
           id: 'COL001',
           batchId: 'BAT-2024-001',
@@ -68,15 +80,51 @@ const LabTest = ({ user, showToast = console.log }) => {
       ];
       
       setBatches(mockBatches);
-      if (!selectedBatch && mockBatches.length > 0) {
-        setSelectedBatch(mockBatches[0]);
-      }
       
     } catch (error) {
       console.error('Error loading batches:', error);
       showToast('Failed to load batches', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Search batch by ID
+  const handleSearchBatch = async () => {
+    if (!searchQuery.trim()) {
+      showToast('Please enter a Batch ID to search', 'error');
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      
+      // Find batch in the loaded batches
+      const foundBatch = batches.find(batch => 
+        batch.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        batch.id.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      if (foundBatch) {
+        setSelectedBatch(foundBatch);
+        showToast(`Batch ${foundBatch.batchId} loaded for testing`, 'success');
+        setSearchQuery(''); // Clear search after successful search
+      } else {
+        showToast(`Batch "${searchQuery}" not found`, 'error');
+      }
+      
+    } catch (error) {
+      console.error('Error searching batch:', error);
+      showToast('Error searching batch', 'error');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Handle Enter key press in search
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearchBatch();
     }
   };
 
@@ -319,311 +367,278 @@ const LabTest = ({ user, showToast = console.log }) => {
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
                     <span className="text-emerald-300 text-sm font-medium">Lab Active</span>
                   </div>
-                  <div className="text-gray-400 text-sm">
-                    {testResults.length} Tests Completed
-                  </div>
                 </div>
               </div>
             </div>
-            
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="max-w-2xl mx-auto">
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-emerald-500/20 to-purple-500/20 rounded-2xl blur"></div>
+          <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-6">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={loadBatches}
-                className="p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition-all duration-200"
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by Batch ID (e.g., BAT 2024 001)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={handleSearchKeyPress}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 text-lg"
+                />
+              </div>
+              <button
+                onClick={handleSearchBatch}
+                disabled={searchLoading || !searchQuery.trim()}
+                className="px-6 py-4 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <RefreshCw className="w-5 h-5 text-white" />
+                {searchLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5" />
+                    Search
+                  </>
+                )}
               </button>
             </div>
+            
+            {/* Selected Batch Display */}
+            {selectedBatch && (
+              <div className="mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  <div>
+                    <span className="text-emerald-300 font-medium">Batch Loaded: </span>
+                    <span className="text-white font-semibold">{selectedBatch.batchId}</span>
+                    <span className="text-gray-400 ml-2">• {selectedBatch.herb} • {selectedBatch.quantity}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Test Form */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Batch Selection */}
+      {/* Centered Add Quality Test Form */}
+      {selectedBatch ? (
+        <div className="max-w-4xl mx-auto">
           <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-emerald-500/20 rounded-2xl blur"></div>
-            <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <Beaker className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold text-white">Select Batch for Testing</h2>
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl blur"></div>
+            <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <Microscope className="w-8 h-8 text-emerald-400" />
+                <h2 className="text-3xl font-bold text-white">Add Quality Test</h2>
+                <div className="text-gray-400">for {selectedBatch.herb} ({selectedBatch.batchId})</div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {batches.map((batch) => (
-                  <button
-                    key={batch.id}
-                    onClick={() => setSelectedBatch(batch)}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                      selectedBatch?.id === batch.id
-                        ? 'border-emerald-500 bg-emerald-500/10'
-                        : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <TestTube className="w-5 h-5 text-blue-400" />
-                      <span className="text-white font-semibold">{batch.herb}</span>
-                    </div>
-                    <div className="space-y-1 text-sm text-gray-300">
-                      <p>ID: {batch.id}</p>
-                      <p>Farmer: {batch.farmer}</p>
-                      <p>Quantity: {batch.quantity}</p>
-                      <p>Location: {batch.location}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Test Form */}
-          {selectedBatch && (
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl blur"></div>
-              <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Microscope className="w-6 h-6 text-emerald-400" />
-                  <h2 className="text-2xl font-bold text-white">Add Quality Test</h2>
-                  <div className="text-gray-400">for {selectedBatch.herb} ({selectedBatch.id})</div>
+            
+              <div className="space-y-8">
+              {/* Test Type Selection */}
+              <div>
+                <label className="block text-lg font-medium text-gray-300 mb-4">
+                  Test Type <span className="text-red-400">*</span>
+                </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {testTypes.map((type) => (
+                    <button
+                      key={type.value}
+                      onClick={() => setNewTest(prev => ({ ...prev, testType: type.value }))}
+                      className={`p-6 rounded-xl border-2 transition-all duration-200 text-left ${
+                        newTest.testType === type.value
+                          ? 'border-emerald-500 bg-emerald-500/10'
+                          : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="text-3xl">{type.icon}</span>
+                        <span className="text-white font-semibold text-lg">{type.label}</span>
+                      </div>
+                      <p className="text-gray-400 text-sm mb-2">{type.description}</p>
+                      <p className="text-blue-400 text-xs">Normal: {type.normalRange}</p>
+                    </button>
+                  ))}
                 </div>
-                
-                <div className="space-y-6">
-                  {/* Test Type Selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-3">
-                      Test Type <span className="text-red-400">*</span>
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {testTypes.map((type) => (
-                        <button
-                          key={type.value}
-                          onClick={() => setNewTest(prev => ({ ...prev, testType: type.value }))}
-                          className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
-                            newTest.testType === type.value
-                              ? 'border-emerald-500 bg-emerald-500/10'
-                              : 'border-slate-600 bg-slate-700/30 hover:border-slate-500'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-2xl">{type.icon}</span>
-                            <span className="text-white font-semibold">{type.label}</span>
-                          </div>
-                          <p className="text-gray-400 text-sm">{type.description}</p>
-                          <p className="text-blue-400 text-xs mt-1">Normal: {type.normalRange}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              </div>
 
-                  {/* Result Value & Status */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Result Value <span className="text-red-400">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={newTest.resultValue}
-                          onChange={(e) => setNewTest(prev => ({ ...prev, resultValue: e.target.value }))}
-                          placeholder="Enter result value"
-                          className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200"
-                        />
-                        {newTest.testType && (
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
-                            {testTypes.find(t => t.value === newTest.testType)?.unit}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Pass/Fail Status */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Test Status
-                      </label>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => setNewTest(prev => ({ ...prev, status: 'Passed' }))}
-                          className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${
-                            newTest.status === 'Passed'
-                              ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
-                              : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
-                          }`}
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                          Pass
-                        </button>
-                        <button
-                          onClick={() => setNewTest(prev => ({ ...prev, status: 'Failed' }))}
-                          className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-2 ${
-                            newTest.status === 'Failed'
-                              ? 'border-red-500 bg-red-500/20 text-red-300'
-                              : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
-                          }`}
-                        >
-                          <XCircle className="w-4 h-4" />
-                          Fail
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Technician */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Technician
-                    </label>
+              {/* Result Value & Status */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <label className="block text-lg font-medium text-gray-300 mb-3">
+                    Result Value <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
                     <input
                       type="text"
-                      value={newTest.technician}
-                      onChange={(e) => setNewTest(prev => ({ ...prev, technician: e.target.value }))}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200"
+                      value={newTest.resultValue}
+                      onChange={(e) => setNewTest(prev => ({ ...prev, resultValue: e.target.value }))}
+                      placeholder="Enter result value"
+                      className="w-full px-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 text-lg"
                     />
-                  </div>
-
-                  {/* Certificate Upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Test Certificate (PDF/Image)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="certificate-upload"
-                      />
-                      <label
-                        htmlFor="certificate-upload"
-                        className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-emerald-500 transition-all duration-200 bg-slate-700/20"
-                      >
-                        <div className="text-center">
-                          <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                          {newTest.certificate ? (
-                            <div>
-                              <p className="text-emerald-400 font-medium">{newTest.certificate.name}</p>
-                              <p className="text-gray-400 text-sm">
-                                {(newTest.certificate.size / 1024 / 1024).toFixed(2)} MB
-                              </p>
-                            </div>
-                          ) : (
-                            <div>
-                              <p className="text-gray-300">Click to upload certificate</p>
-                              <p className="text-gray-400 text-sm">PDF, JPG, PNG up to 10MB</p>
-                            </div>
-                          )}
-                        </div>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Notes (Optional)
-                    </label>
-                    <textarea
-                      value={newTest.notes}
-                      onChange={(e) => setNewTest(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Additional notes about the test..."
-                      rows={3}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 resize-none"
-                    />
-                  </div>
-
-                  {/* Progress Bar */}
-                  {submittingTest && (
-                    <div className="bg-slate-700/50 rounded-xl p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        <TestTube className="w-5 h-5 text-blue-400 animate-pulse" />
-                        <span className="text-white font-medium">Processing Test & Blockchain Verification...</span>
+                    {newTest.testType && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">
+                        {testTypes.find(t => t.value === newTest.testType)?.unit}
                       </div>
-                      <div className="w-full bg-slate-600 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-emerald-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${uploadProgress}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-gray-400 text-sm mt-2">{uploadProgress}% Complete</p>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <button
-                    onClick={handleSubmitTest}
-                    disabled={submittingTest || !newTest.testType || !newTest.resultValue}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submittingTest ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-5 h-5" />
-                        Save Test & Verify on Blockchain
-                      </>
                     )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Test Results Sidebar */}
-        <div className="space-y-6">
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-emerald-500/20 to-purple-500/20 rounded-2xl blur"></div>
-            <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl shadow-xl overflow-hidden">
-              <div className="p-6 border-b border-white/10">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-6 h-6 text-emerald-400" />
-                  <h3 className="text-xl font-bold text-white">Recent Test Results</h3>
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-4 max-h-96 overflow-y-auto">
-                {testResults.length === 0 ? (
-                  <div className="text-center py-8">
-                    <TestTube className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                    <p className="text-gray-400">No test results yet</p>
                   </div>
-                ) : (
-                  testResults.map((test) => (
-                    <div key={test.id} className="bg-slate-800/30 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <TestTube className="w-4 h-4 text-blue-400" />
-                          <span className="text-white font-medium">{test.testType}</span>
+                </div>
+
+                <div>
+                  <label className="block text-lg font-medium text-gray-300 mb-3">
+                    Test Status
+                  </label>
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setNewTest(prev => ({ ...prev, status: 'Passed' }))}
+                      className={`flex-1 px-6 py-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-3 ${
+                        newTest.status === 'Passed'
+                          ? 'border-emerald-500 bg-emerald-500/20 text-emerald-300'
+                          : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Pass
+                    </button>
+                    <button
+                      onClick={() => setNewTest(prev => ({ ...prev, status: 'Failed' }))}
+                      className={`flex-1 px-6 py-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-center gap-3 ${
+                        newTest.status === 'Failed'
+                          ? 'border-red-500 bg-red-500/20 text-red-300'
+                          : 'border-slate-600 bg-slate-700/30 text-gray-400 hover:border-slate-500'
+                      }`}
+                    >
+                      <XCircle className="w-5 h-5" />
+                      Fail
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Technician */}
+              <div>
+                <label className="block text-lg font-medium text-gray-300 mb-3">
+                  Technician
+                </label>
+                <input
+                  type="text"
+                  value={newTest.technician}
+                  onChange={(e) => setNewTest(prev => ({ ...prev, technician: e.target.value }))}
+                  className="w-full px-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 text-lg"
+                />
+              </div>
+
+              {/* Certificate Upload */}
+              <div>
+                <label className="block text-lg font-medium text-gray-300 mb-3">
+                  Test Certificate (PDF/Image)
+                </label>
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="certificate-upload"
+                  />
+                  <label
+                    htmlFor="certificate-upload"
+                    className="flex items-center justify-center w-full px-6 py-8 border-2 border-dashed border-slate-600 rounded-xl cursor-pointer hover:border-emerald-500 transition-all duration-200 bg-slate-700/20"
+                  >
+                    <div className="text-center">
+                      <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+                      {newTest.certificate ? (
+                        <div>
+                          <p className="text-emerald-400 font-medium text-lg">{newTest.certificate.name}</p>
+                          <p className="text-gray-400 text-sm">
+                            {(newTest.certificate.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
                         </div>
-                        {getStatusBadge(test.status)}
-                      </div>
-                      <div className="space-y-1 text-sm text-gray-300">
-                        <div>Batch: {test.batchId}</div>
-                        <div>Result: {test.result}</div>
-                        <div>Date: {test.testDate}</div>
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-3 h-3 text-emerald-400" />
-                          <span className="text-emerald-400 text-xs">On-Chain Verified ✅</span>
+                      ) : (
+                        <div>
+                          <p className="text-gray-300 text-lg">Click to upload certificate</p>
+                          <p className="text-gray-400 text-sm">PDF, JPG, PNG up to 10MB</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Hash className="w-3 h-3 text-blue-400" />
-                          <span className="text-blue-400 text-xs">{test.txId?.substr(0, 10)}...</span>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))
+                  </label>
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-lg font-medium text-gray-300 mb-3">
+                  Notes (Optional)
+                </label>
+                <textarea
+                  value={newTest.notes}
+                  onChange={(e) => setNewTest(prev => ({ ...prev, notes: e.target.value }))}
+                  placeholder="Additional notes about the test..."
+                  rows={4}
+                  className="w-full px-4 py-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-gray-400 focus:border-emerald-500 focus:outline-none transition-all duration-200 resize-none text-lg"
+                />
+              </div>
+
+              {/* Progress Bar */}
+              {submittingTest && (
+                <div className="bg-slate-700/50 rounded-xl p-6">
+                  <div className="flex items-center gap-3 mb-3">
+                    <TestTube className="w-6 h-6 text-blue-400 animate-pulse" />
+                    <span className="text-white font-medium text-lg">Processing Test & Blockchain Verification...</span>
+                  </div>
+                  <div className="w-full bg-slate-600 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-emerald-500 to-blue-500 h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-gray-400 text-sm mt-2">{uploadProgress}% Complete</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                onClick={handleSubmitTest}
+                disabled={submittingTest || !newTest.testType || !newTest.resultValue}
+                className="w-full px-8 py-5 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              >
+                {submittingTest ? (
+                  <>
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-6 h-6" />
+                    Save Test & Verify on Blockchain
+                  </>
                 )}
+              </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="max-w-2xl mx-auto">
+          <div className="relative">
+            <div className="absolute -inset-1 bg-gradient-to-r from-slate-500/20 via-gray-500/20 to-slate-500/20 rounded-2xl blur"></div>
+            <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-12">
+              <div className="text-center">
+                <TestTube className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-2xl font-bold text-white mb-4">Search for a Batch to Test</h3>
+                <p className="text-gray-400 text-lg">
+                  Use the search bar above to find a batch by its ID (e.g., "BAT 2024 001")
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

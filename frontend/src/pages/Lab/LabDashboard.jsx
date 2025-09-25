@@ -3,7 +3,7 @@ import {
   Search, Filter, Beaker, TestTube, CheckCircle, XCircle, Clock,
   TrendingUp, Activity, AlertCircle, FlaskConical, Microscope,
   RefreshCw, Calendar, User, Package, Plus, Upload, X, Save, 
-  Hash, Shield, Eye, Download, Thermometer
+  Hash, Shield, Eye, Download, Thermometer, Copy
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
@@ -291,6 +291,17 @@ const LabDashboard = ({ user, showToast = console.log }) => {
     setShowAddTestModal(true);
   };
 
+  // Copy batch ID to clipboard
+  const copyBatchId = async (batchId) => {
+    try {
+      await navigator.clipboard.writeText(batchId);
+      showToast(`Batch ID "${batchId}" copied to clipboard`, 'success');
+    } catch (err) {
+      console.error('Failed to copy batch ID:', err);
+      showToast('Failed to copy batch ID', 'error');
+    }
+  };
+
   // Batch Card Component (from Processor Batches page)
   const BatchCard = ({ batch }) => {
     return (
@@ -301,7 +312,16 @@ const LabDashboard = ({ user, showToast = console.log }) => {
             <Package className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-white">{batch.batchId}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white">{batch.batchId}</h3>
+              <button
+                onClick={() => copyBatchId(batch.batchId)}
+                className="p-1.5 bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 hover:border-slate-500/50 rounded-lg transition-all duration-200 group"
+                title="Copy Batch ID"
+              >
+                <Copy className="w-3.5 h-3.5 text-gray-400 group-hover:text-white" />
+              </button>
+            </div>
             <p className="text-sm text-slate-400">{batch.herb}</p>
           </div>
         </div>
