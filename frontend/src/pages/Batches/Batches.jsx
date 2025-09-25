@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Thermometer, Clock, CheckCircle, AlertCircle, Calendar } from 'lucide-react';
+import { Package, Thermometer, Clock, CheckCircle, AlertCircle, Calendar, Download } from 'lucide-react';
 import { api } from '../../utils/api.js';
 import { sharedStorage } from '../../utils/sharedStorage.js';
 
@@ -102,6 +102,57 @@ const Batches = () => {
     return unsubscribe;
   }, []);
 
+  // CSV Export Function
+  const exportBatchToCSV = (batch) => {
+    // Prepare CSV data
+    const csvData = [
+      ['Field', 'Value'],
+      ['Batch ID', batch.batchId],
+      ['Herb Type', batch.herb],
+      ['Quantity', batch.quantity],
+      ['Quality Grade', 'Premium (AA)'],
+      ['Progress', `${batch.progress}%`],
+      ['Status', 'Complete'],
+      ['Date', '2025-09-24'],
+      ['Location', batch.location || 'Bangalore, Karnataka'],
+      ['Farmer', batch.farmer || 'COL 2024'],
+      ['Collection ID', batch.id || 'COL004'],
+      ['GPS Coordinates', batch.gpsCoordinates || '12.9716°, 77.5946°'],
+      ['Moisture Content', batch.moisture || '12%'],
+      ['Collection Time', batch.collectionTime || '9/24/2025, 8:30:00 AM'],
+      ['Submission Date', batch.submissionDate || '2025-09-24'],
+      ['Processing Steps', ''],
+    ];
+
+    // Add processing steps data
+    if (batch.customProcessingSteps && batch.customProcessingSteps.length > 0) {
+      batch.customProcessingSteps.forEach((step, index) => {
+        csvData.push([`Step ${index + 1} - Type`, step.stepType]);
+        csvData.push([`Step ${index + 1} - Temperature`, `${step.temperature}°C`]);
+        csvData.push([`Step ${index + 1} - Duration`, step.duration]);
+        csvData.push([`Step ${index + 1} - Status`, step.status]);
+        csvData.push([`Step ${index + 1} - Notes`, step.notes]);
+        csvData.push([`Step ${index + 1} - Date`, step.date]);
+      });
+    }
+
+    // Convert to CSV string
+    const csvContent = csvData.map(row => 
+      row.map(field => `"${field}"`).join(',')
+    ).join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${batch.batchId}_report.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Updated Batch Card Component to match second image format
   const BatchCard = ({ batch }) => {
     console.log('🔄 Rendering BatchCard with batch:', batch);
@@ -117,6 +168,15 @@ const Batches = () => {
             <h3 className="text-lg font-bold text-white">{batch.batchId}</h3>
             <p className="text-sm text-slate-400">{batch.herb}</p>
           </div>
+          {/* CSV Export Button */}
+          <button
+            onClick={() => exportBatchToCSV(batch)}
+            className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg text-emerald-300 hover:text-emerald-200 transition-all duration-200 flex items-center gap-1.5 text-sm"
+            title="Export batch details to CSV"
+          >
+            <Download className="w-3.5 h-3.5" />
+            CSV
+          </button>
         </div>
 
         {/* Progress section */}
