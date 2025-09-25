@@ -224,10 +224,20 @@ export const api = {
     return mockStats;
   },
 
-  // Batches - Now using shared storage
+  // Batches - Now using shared storage (excludes processed batches)
   getBatches: async (filters = {}) => {
     await delay(800);
     let filteredBatches = sharedStorage.getBatches(); // Get batches from verified collections in shared storage
+    
+    // Exclude batches that have processing steps (they should appear in processed batches page instead)
+    const processingStepsData = localStorage.getItem('ayurherb_processing_steps');
+    const processingSteps = processingStepsData ? JSON.parse(processingStepsData) : {};
+    
+    filteredBatches = filteredBatches.filter(batch => {
+      const batchSteps = processingSteps[batch.batchId] || [];
+      // Only show batches that don't have custom processing steps
+      return batchSteps.length === 0;
+    });
     
     if (filters.status) {
       filteredBatches = filteredBatches.filter(batch => 
@@ -431,6 +441,51 @@ export const api = {
       fileName: file.name,
       fileSize: file.size
     };
+  },
+
+  // Get processed batches (batches with custom processing steps)
+  getProcessedBatches: async () => {
+    await delay(600);
+    
+    // Get processing steps from localStorage
+    const processingStepsData = localStorage.getItem('ayurherb_processing_steps');
+    const processingSteps = processingStepsData ? JSON.parse(processingStepsData) : {};
+    
+    console.log('Processing steps data:', processingSteps);
+    
+    // Get all batches
+    const allBatches = sharedStorage.getBatches();
+    console.log('All batches:', allBatches);
+    
+    // Filter batches that have custom processing steps (beyond default Collection Verified/Quality Check)
+    const processedBatches = allBatches.filter(batch => {
+      const batchSteps = processingSteps[batch.batchId] || [];
+      console.log(`Batch ${batch.batchId} has ${batchSteps.length} processing steps:`, batchSteps);
+      // Check if batch has custom processing steps (not just default ones)
+      const hasCustomSteps = batchSteps.length > 0;
+      return hasCustomSteps;
+    }).map(batch => {
+      const batchSteps = processingSteps[batch.batchId] || [];
+      
+      // Calculate progress based on processing steps
+      const totalSteps = batchSteps.length + 2; // +2 for default steps
+      const completedSteps = batchSteps.filter(step => step.status === 'Completed').length + 2;
+      const progress = Math.round((completedSteps / totalSteps) * 100);
+      
+      return {
+        ...batch,
+        processingSteps: [
+          { step: 'Collection Verified', date: batch.harvestDate, status: 'Completed' },
+          { step: 'Quality Check', date: batch.harvestDate, status: 'Completed' },
+          ...batchSteps
+        ],
+        progress,
+        customProcessingSteps: batchSteps
+      };
+    });
+    
+    console.log('Processed batches result:', processedBatches);
+    return processedBatches;
   },
 
   // Clear all batches/collections

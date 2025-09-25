@@ -201,6 +201,29 @@ export const sharedStorage = {
           qualityGrade: 'Premium (AA)',
           qualityAssessment: 'Premium (AA)',
           createdAt: new Date().toISOString()
+        },
+        {
+          id: 'COL004',
+          batchId: 'BAT 2024 009',
+          collectorId: 'COL 2024',
+          farmer: 'COL 2024',
+          herb: 'Turmeric',
+          speciesName: 'Turmeric',
+          quantity: '25 kg',
+          weight: '25 kg',
+          moisture: '12%',
+          gpsCoordinates: '12.9716°, 77.5946°',
+          latitude: '12.9716°',
+          longitude: '77.5946°',
+          accuracy: '±45 meters',
+          collectionTime: '9/24/2025, 8:30:00 AM',
+          submissionDate: '2025-09-24',
+          timestamp: '9/24/2025, 8:30:00 AM',
+          status: 'Verified',
+          location: 'Bangalore, Karnataka',
+          qualityGrade: 'Premium (AA)',
+          qualityAssessment: 'Premium (AA)',
+          createdAt: new Date().toISOString()
         }
       ];
       
@@ -248,8 +271,68 @@ const convertCollectionToBatch = (collection) => {
 };
 
 // Initialize storage on module load
-// Clear existing data first to apply new configuration
-sharedStorage.clearAllData();
-sharedStorage.initialize();
+// Only clear and reinitialize if no data exists
+const initializeStorage = () => {
+  const existingCollections = localStorage.getItem(STORAGE_KEYS.COLLECTIONS);
+  const existingSteps = localStorage.getItem('ayurherb_processing_steps');
+  
+  // Only initialize if no data exists
+  if (!existingCollections) {
+    sharedStorage.initialize();
+  } else {
+    // Ensure we have the sample batch for processing steps demo
+    const collections = sharedStorage.getCollections();
+    const hasSampleBatch = collections.some(c => c.batchId === 'BAT 2024 009');
+    
+    if (!hasSampleBatch) {
+      const sampleCollection = {
+        id: 'COL004',
+        batchId: 'BAT 2024 009',
+        collectorId: 'COL 2024',
+        farmer: 'COL 2024',
+        herb: 'Turmeric',
+        speciesName: 'Turmeric',
+        quantity: '25 kg',
+        weight: '25 kg',
+        moisture: '12%',
+        gpsCoordinates: '12.9716°, 77.5946°',
+        latitude: '12.9716°',
+        longitude: '77.5946°',
+        accuracy: '±45 meters',
+        collectionTime: '9/24/2025, 8:30:00 AM',
+        submissionDate: '2025-09-24',
+        timestamp: '9/24/2025, 8:30:00 AM',
+        status: 'Verified',
+        location: 'Bangalore, Karnataka',
+        qualityGrade: 'Premium (AA)',
+        qualityAssessment: 'Premium (AA)',
+        createdAt: new Date().toISOString()
+      };
+      
+      collections.push(sampleCollection);
+      sharedStorage.setCollections(collections);
+    }
+  }
+  
+  // Initialize sample processing steps for demo
+  if (!existingSteps) {
+    const sampleProcessingSteps = {
+      'BAT 2024 009': [
+        {
+          stepType: 'Drying Process',
+          temperature: 20,
+          duration: '2 hrs',
+          notes: 'Good condition',
+          status: 'Completed',
+          date: '2025-09-24',
+          timestamp: new Date().toLocaleString()
+        }
+      ]
+    };
+    localStorage.setItem('ayurherb_processing_steps', JSON.stringify(sampleProcessingSteps));
+  }
+};
+
+initializeStorage();
 
 export default sharedStorage;
