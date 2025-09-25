@@ -10,6 +10,7 @@ const processingStepsRoutes = require('./routes/processingSteps');
 const batchesRoutes = require('./routes/batches');
 const processorsRoutes = require('./routes/processors');
 const blockchainRoutes = require('./routes/blockchain');
+const labTestsRoutes = require('./routes/labTests');
 
 // Import services
 const database = require('./models/database');
@@ -58,6 +59,7 @@ app.use(`${API_PREFIX}/processing-steps`, processingStepsRoutes);
 app.use(`${API_PREFIX}/batches`, batchesRoutes);
 app.use(`${API_PREFIX}/processors`, processorsRoutes);
 app.use(`${API_PREFIX}/blockchain`, blockchainRoutes);
+app.use(`${API_PREFIX}/lab-tests`, labTestsRoutes);
 
 // Root endpoint with API documentation
 app.get('/', (req, res) => {

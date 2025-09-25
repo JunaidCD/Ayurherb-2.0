@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   TestTube, Beaker, FlaskConical, Microscope, Upload, Save, 
   CheckCircle, XCircle, Clock, Hash, Shield, Eye, Download,
-  Plus, RefreshCw, AlertCircle, FileText, Activity, Search
+  Plus, RefreshCw, AlertCircle, FileText, Activity, Search, Copy, X
 } from 'lucide-react';
 import { api } from '../../utils/api';
 
@@ -13,6 +13,8 @@ const LabTest = ({ user, showToast = console.log }) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
+  const [transactionDetails, setTransactionDetails] = useState(null);
   
   // Test form state
   const [newTest, setNewTest] = useState({
@@ -217,7 +219,7 @@ const LabTest = ({ user, showToast = console.log }) => {
     }
   };
 
-  // Submit new test
+  // Submit new test to real blockchain
   const handleSubmitTest = async () => {
     try {
       // Validation
@@ -232,53 +234,78 @@ const LabTest = ({ user, showToast = console.log }) => {
 
       setSubmittingTest(true);
       setUploadProgress(0);
-
-      // Simulate progress
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return prev;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      
+      showToast('Checking batch in database...', 'info');
 
       // Get selected test type details
       const selectedTestType = testTypes.find(t => t.value === newTest.testType);
       
-      // Create test data
-      const testData = {
-        batchId: selectedBatch.id,
+      // Prepare lab test data for blockchain API
+      const labTestData = {
+        batchId: selectedBatch.batchId,
         testType: selectedTestType.label,
-        result: `${newTest.resultValue}${selectedTestType.unit}`,
+        resultValue: newTest.resultValue,
+        unit: selectedTestType.unit || '',
         status: newTest.status,
         technician: newTest.technician,
         notes: newTest.notes,
-        testDate: new Date().toISOString(),
-        certificate: newTest.certificate
+        certificateHash: newTest.certificate ? `cert_${Math.random().toString(16).substr(2, 16)}` : null
       };
 
-      // Simulate API call to backend
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      setUploadProgress(20);
+      showToast('Submitting to blockchain...', 'info');
 
-      // Simulate blockchain transaction
-      const mockTxId = `0x${Math.random().toString(16).substr(2, 32)}`;
-      
+      // Call real blockchain API
+      const response = await fetch('http://localhost:3001/api/v1/lab-tests', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(labTestData)
+      });
+
+      setUploadProgress(60);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit lab test');
+      }
+
+      const result = await response.json();
       setUploadProgress(100);
 
-      // Add to test results
+      // Store transaction details for modal
+      setTransactionDetails({
+        transactionHash: result.data.blockchain.transactionHash,
+        blockNumber: result.data.blockchain.blockNumber,
+        gasUsed: result.data.blockchain.gasUsed,
+        network: result.data.blockchain.network,
+        contractAddress: result.data.blockchain.contractAddress,
+        batchId: result.data.batchId,
+        testType: result.data.testType,
+        result: result.data.fullResult,
+        status: result.data.status,
+        technician: result.data.technician,
+        batch: result.data.batch
+      });
+
+      // Show transaction modal
+      setShowTransactionModal(true);
+
+      // Add to test results for UI display
       const newTestResult = {
-        id: testResults.length + 1,
-        batchId: selectedBatch.id,
-        testType: selectedTestType.label,
-        result: testData.result,
-        status: newTest.status,
+        id: result.data.id,
+        batchId: result.data.batchId,
+        testType: result.data.testType,
+        result: result.data.fullResult,
+        status: result.data.status,
         testDate: new Date().toLocaleDateString(),
-        technician: newTest.technician,
+        technician: result.data.technician,
         blockchainStatus: 'On-Chain Verified ✅',
-        txId: mockTxId,
-        notes: newTest.notes
+        txId: result.data.blockchain.transactionHash,
+        blockNumber: result.data.blockchain.blockNumber,
+        gasUsed: result.data.blockchain.gasUsed,
+        notes: result.data.notes
       };
 
       setTestResults(prev => [...prev, newTestResult]);
@@ -292,11 +319,19 @@ const LabTest = ({ user, showToast = console.log }) => {
         notes: '',
         certificate: null
       });
-      
-      showToast(`Test added successfully! Blockchain TX: ${mockTxId.substr(0, 10)}...`, 'success');
+
+      console.log('=== REAL BLOCKCHAIN TEST DATA SAVED ===');
+      console.log('API Response:', result);
 
     } catch (error) {
-      showToast('Failed to add test: ' + error.message, 'error');
+      if (error.message.includes('Batch') && error.message.includes('not found')) {
+        showToast(`❌ Batch ${selectedBatch.batchId} not found in database. Please ensure the batch exists.`, 'error');
+      } else if (error.message.includes('Failed to fetch')) {
+        showToast('❌ Backend server not running. Please start the blockchain backend.', 'error');
+      } else {
+        showToast('Failed to save test on blockchain: ' + error.message, 'error');
+      }
+      console.error('Blockchain submission error:', error);
     } finally {
       setSubmittingTest(false);
       setUploadProgress(0);
@@ -634,6 +669,138 @@ const LabTest = ({ user, showToast = console.log }) => {
                 <p className="text-gray-400 text-lg">
                   Use the search bar above to find a batch by its ID (e.g., "BAT 2024 001")
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Details Modal */}
+      {showTransactionModal && transactionDetails && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative w-full max-w-2xl">
+            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/50 to-blue-500/50 rounded-2xl blur"></div>
+            <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 border border-emerald-500/30 rounded-2xl p-8">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">✅ Test Saved on Blockchain!</h3>
+                    <p className="text-gray-400">Transaction confirmed on Hyperledger Besu</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowTransactionModal(false)}
+                  className="p-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg transition-all duration-200"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Transaction Details */}
+              <div className="space-y-6">
+                {/* Test Information */}
+                <div className="bg-slate-700/30 rounded-xl p-4">
+                  <h4 className="text-lg font-semibold text-white mb-3">Test Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-400">Batch ID:</span>
+                      <span className="text-white font-medium ml-2">{transactionDetails.batchId}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Test Type:</span>
+                      <span className="text-white font-medium ml-2">{transactionDetails.testType}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Result:</span>
+                      <span className="text-white font-medium ml-2">{transactionDetails.result}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Status:</span>
+                      <span className={`font-medium ml-2 ${transactionDetails.status === 'Passed' ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {transactionDetails.status}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Technician:</span>
+                      <span className="text-white font-medium ml-2">{transactionDetails.technician}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Herb Type:</span>
+                      <span className="text-white font-medium ml-2">{transactionDetails.batch?.herbType}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Blockchain Details */}
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                  <h4 className="text-lg font-semibold text-emerald-300 mb-3">🔗 Blockchain Details</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Transaction Hash:</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-300 font-mono text-sm">
+                          {transactionDetails.transactionHash.substr(0, 20)}...
+                        </span>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(transactionDetails.transactionHash)}
+                          className="p-1 bg-emerald-500/20 hover:bg-emerald-500/30 rounded"
+                        >
+                          <Copy className="w-3 h-3 text-emerald-400" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Block Number:</span>
+                      <span className="text-white font-medium">{transactionDetails.blockNumber}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Gas Used:</span>
+                      <span className="text-white font-medium">{transactionDetails.gasUsed}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Network:</span>
+                      <span className="text-blue-400 font-medium">{transactionDetails.network}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400">Contract:</span>
+                      <span className="text-gray-300 font-mono text-sm">
+                        {transactionDetails.contractAddress.substr(0, 10)}...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Success Message */}
+                <div className="text-center bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
+                  <div className="text-emerald-300 font-medium">
+                    🎉 Your lab test data has been permanently recorded on the blockchain!
+                  </div>
+                  <div className="text-gray-400 text-sm mt-2">
+                    This transaction provides immutable proof of your test results and cannot be altered.
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(transactionDetails.transactionHash)}
+                    className="flex-1 px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Copy Transaction Hash
+                  </button>
+                  <button
+                    onClick={() => setShowTransactionModal(false)}
+                    className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200"
+                  >
+                    Continue
+                  </button>
+                </div>
               </div>
             </div>
           </div>

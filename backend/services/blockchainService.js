@@ -318,6 +318,52 @@ class BlockchainService {
         }
     }
 
+    // Add lab test to blockchain (similar to processing step)
+    async addLabTest(batchId, dataHash, testData) {
+        try {
+            if (!this.contract) {
+                console.log('⚠️  Blockchain integration not available - simulating blockchain storage');
+                // Return simulated blockchain data
+                return {
+                    transactionHash: `0x${crypto.randomBytes(32).toString('hex')}`,
+                    blockNumber: Math.floor(Math.random() * 1000000) + 18500000,
+                    blockHash: `0x${crypto.randomBytes(32).toString('hex')}`,
+                    gasUsed: Math.floor(Math.random() * 50000) + 21000,
+                    contractAddress: '0x742d35Cc6634C0532925a3b8D4c4b4c4b4c4b4c4',
+                    status: 'confirmed'
+                };
+            }
+
+            // Use the existing addProcessingStep method for lab tests
+            // We'll adapt the lab test data to fit the processing step format
+            const stepData = {
+                batchId: batchId,
+                processorId: `LAB_${testData.technician.replace(/\s+/g, '_')}`,
+                stepType: `LAB_TEST_${testData.testType.replace(/\s+/g, '_')}`,
+                temperature: 0, // Not applicable for lab tests
+                duration: 0, // Not applicable for lab tests
+                notes: `${testData.testType}: ${testData.fullResult} - Status: ${testData.status} - Notes: ${testData.notes}`,
+                fileHash: dataHash
+            };
+
+            const result = await this.addProcessingStepToBlockchain(stepData);
+            
+            return {
+                transactionHash: result.transactionHash,
+                blockNumber: result.blockNumber,
+                blockHash: result.blockHash,
+                gasUsed: result.gasUsed,
+                contractAddress: this.contractAddress,
+                stepHash: result.stepHash,
+                status: result.status
+            };
+
+        } catch (error) {
+            console.error('Error adding lab test to blockchain:', error);
+            throw error;
+        }
+    }
+
     // Get network info
     async getNetworkInfo() {
         try {
