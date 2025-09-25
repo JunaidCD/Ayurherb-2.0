@@ -3,7 +3,7 @@ import {
   Search, Filter, Beaker, TestTube, CheckCircle, XCircle, Clock,
   TrendingUp, Activity, AlertCircle, FlaskConical, Microscope,
   RefreshCw, Calendar, User, Package, Plus, Upload, X, Save, 
-  Hash, Shield, Eye, Download
+  Hash, Shield, Eye, Download, Thermometer
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
@@ -48,8 +48,28 @@ const LabDashboard = ({ user, showToast = console.log }) => {
     try {
       setLoading(true);
       
-      // Empty batches array - no items for testing
-      const mockBatches = [];
+      // Sample batch data for testing
+      const mockBatches = [
+        {
+          id: 'BAT 2024 001',
+          batchId: 'BAT 2024 001',
+          herb: 'Allovera',
+          farmer: 'COL 2024',
+          quantity: '5 kg',
+          location: 'Bangalore, Karnataka',
+          progress: 100,
+          customProcessingSteps: [
+            {
+              stepType: 'Drying Process',
+              temperature: 20,
+              duration: '2 hrs',
+              notes: 'Good condition',
+              status: 'Completed',
+              date: '2025-09-24'
+            }
+          ]
+        }
+      ];
       
       setBatches(mockBatches);
       calculateStats(mockBatches);
@@ -271,6 +291,93 @@ const LabDashboard = ({ user, showToast = console.log }) => {
     setShowAddTestModal(true);
   };
 
+  // Batch Card Component (from Processor Batches page)
+  const BatchCard = ({ batch }) => {
+    return (
+      <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-600/50 rounded-xl p-4 hover:border-slate-500/70 transition-all duration-300 shadow-lg">
+        {/* Header with icon and batch info */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-emerald-600 rounded-lg flex items-center justify-center">
+            <Package className="w-4 h-4 text-white" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-bold text-white">{batch.batchId}</h3>
+            <p className="text-sm text-slate-400">{batch.herb}</p>
+          </div>
+        </div>
+
+        {/* Progress section */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-2xl font-bold text-white">{batch.progress}%</span>
+            <span className="text-sm text-slate-400">Complete</span>
+          </div>
+          <div className="w-full bg-slate-700/60 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-emerald-400 to-blue-400 h-2 rounded-full transition-all duration-700"
+              style={{ width: `${batch.progress}%` }}
+            ></div>
+          </div>
+        </div>
+
+        {/* Processing step info */}
+        {batch.customProcessingSteps && batch.customProcessingSteps.length > 0 && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Package className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-medium text-blue-300">
+                {batch.customProcessingSteps[batch.customProcessingSteps.length - 1].stepType}
+              </span>
+            </div>
+            
+            {/* Three metric boxes */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-orange-500/20 rounded-lg p-3 text-center border border-orange-500/30">
+                <Thermometer className="w-4 h-4 text-orange-300 mx-auto mb-1" />
+                <div className="text-xs text-orange-200 mb-1">Temp</div>
+                <div className="text-sm font-bold text-white">
+                  {batch.customProcessingSteps[batch.customProcessingSteps.length - 1].temperature}°C
+                </div>
+              </div>
+              
+              <div className="bg-blue-500/20 rounded-lg p-3 text-center border border-blue-500/30">
+                <Clock className="w-4 h-4 text-blue-300 mx-auto mb-1" />
+                <div className="text-xs text-blue-200 mb-1">Duration</div>
+                <div className="text-sm font-bold text-white">
+                  {batch.customProcessingSteps[batch.customProcessingSteps.length - 1].duration}
+                </div>
+              </div>
+              
+              <div className="bg-emerald-500/20 rounded-lg p-3 text-center border border-emerald-500/30">
+                <CheckCircle className="w-4 h-4 text-emerald-300 mx-auto mb-1" />
+                <div className="text-xs text-emerald-200 mb-1">Status</div>
+                <div className="text-xs font-bold text-emerald-300">
+                  Good condition
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Bottom info grid */}
+        <div className="grid grid-cols-3 gap-3 text-xs border-t border-slate-600/50 pt-3">
+          <div>
+            <div className="text-slate-400 mb-1">Quantity</div>
+            <div className="font-semibold text-white">{batch.quantity}</div>
+          </div>
+          <div>
+            <div className="text-slate-400 mb-1">Quality</div>
+            <div className="font-semibold text-white">Premium (AA)</div>
+          </div>
+          <div>
+            <div className="text-slate-400 mb-1">Date</div>
+            <div className="font-semibold text-white">2025-09-24</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const getStatusBadge = (batch) => {
     if (!batch.labResults) {
       return (
@@ -456,57 +563,13 @@ const LabDashboard = ({ user, showToast = console.log }) => {
                     <p className="text-gray-400 text-lg">New Item for Testing will appear here</p>
                   </div>
                 ) : (
-                  filteredBatches.map((batch) => (
-                    <div 
-                      key={batch.id} 
-                      className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-700/50 transition-all duration-200"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                            <Microscope className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="text-white font-semibold">{batch.herb}</h4>
-                            <p className="text-gray-400 text-sm">{batch.id}</p>
-                          </div>
-                        </div>
-                        {getStatusBadge(batch)}
+                  <div className="max-w-md">
+                    {filteredBatches.map((batch) => (
+                      <div key={batch.id} className="mb-4">
+                        <BatchCard batch={batch} />
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-300">{batch.farmer}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Package className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-300">{batch.quantity}</span>
-                        </div>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openAddTestModal(batch);
-                          }}
-                          className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Add Quality Test
-                        </button>
-                        <button
-                          onClick={() => navigate(`/batch/${batch.id}`)}
-                          className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View Details
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
