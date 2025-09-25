@@ -5,6 +5,13 @@ const VerificationReport = ({ user, showToast }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationCheckpoints, setVerificationCheckpoints] = useState({
+    batchInfoVerified: false,
+    processingStepsVerified: false,
+    labResultsVerified: false,
+    blockchainReadyVerified: false
+  });
 
   // Mock batch data (same as from Collections page)
   const batchData = {
@@ -45,6 +52,13 @@ const VerificationReport = ({ user, showToast }) => {
       const batch = batchData[searchQuery.toUpperCase()];
       if (batch) {
         setSearchResults(batch);
+        // Reset checkpoints when new batch is found
+        setVerificationCheckpoints({
+          batchInfoVerified: false,
+          processingStepsVerified: false,
+          labResultsVerified: false,
+          blockchainReadyVerified: false
+        });
         showToast(`Batch ${searchQuery} found successfully!`, 'success');
       } else {
         setSearchResults(null);
@@ -54,9 +68,111 @@ const VerificationReport = ({ user, showToast }) => {
     }, 1000);
   };
 
-  const handleVerify = () => {
-    if (searchResults) {
-      showToast(`Batch ${searchResults.id} has been verified successfully!`, 'success');
+  const handleCheckpointChange = (checkpoint) => {
+    setVerificationCheckpoints(prev => ({
+      ...prev,
+      [checkpoint]: !prev[checkpoint]
+    }));
+  };
+
+  const areAllCheckpointsCompleted = () => {
+    return Object.values(verificationCheckpoints).every(checkpoint => checkpoint === true);
+  };
+
+  const handleVerify = async () => {
+    if (!searchResults) return;
+
+    // Check if all checkpoints are completed
+    if (!areAllCheckpointsCompleted()) {
+      showToast('Please complete all verification checkpoints before proceeding', 'warning');
+      return;
+    }
+
+    setIsVerifying(true);
+    
+    try {
+      // Show loading state
+      showToast('Initiating blockchain verification...', 'info');
+      
+      // Prepare verification data for blockchain
+      const verificationData = {
+        batchId: searchResults.id,
+        herbType: searchResults.herbType,
+        location: searchResults.location,
+        quantity: searchResults.quantity,
+        quality: searchResults.quality,
+        harvestDate: searchResults.harvestDate,
+        processingSteps: {
+          type: searchResults.processingSteps.type,
+          temperature: searchResults.processingSteps.temperature,
+          duration: searchResults.processingSteps.duration,
+          status: searchResults.processingSteps.status,
+          progress: searchResults.processingSteps.progress
+        },
+        labResults: {
+          testType: searchResults.labResults.testType,
+          result: searchResults.labResults.result,
+          status: searchResults.labResults.status,
+          date: searchResults.labResults.date
+        },
+        verificationTimestamp: new Date().toISOString(),
+        verifiedBy: user?.name || 'Admin',
+        verificationStatus: 'VERIFIED'
+      };
+
+      // Simulate blockchain transaction
+      showToast('Creating blockchain transaction...', 'info');
+      
+      // Simulate API call to blockchain service
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate mock transaction hash
+      const txHash = `0x${Math.random().toString(16).substr(2, 40)}${Math.random().toString(16).substr(2, 24)}`;
+      
+      // Update the search results with blockchain verification
+      setSearchResults(prevResults => ({
+        ...prevResults,
+        labResults: {
+          ...prevResults.labResults,
+          blockchainTx: txHash,
+          verifiedOnBlockchain: true,
+          verificationTimestamp: new Date().toISOString()
+        },
+        verificationStatus: 'BLOCKCHAIN_VERIFIED'
+      }));
+
+      // Store verification in localStorage for persistence
+      const verificationRecord = {
+        ...verificationData,
+        transactionHash: txHash,
+        blockNumber: Math.floor(Math.random() * 1000000) + 500000,
+        gasUsed: '21000',
+        verificationComplete: true
+      };
+      
+      const existingVerifications = JSON.parse(localStorage.getItem('ayurherb_blockchain_verifications') || '[]');
+      existingVerifications.push(verificationRecord);
+      localStorage.setItem('ayurherb_blockchain_verifications', JSON.stringify(existingVerifications));
+
+      // Success notification with transaction hash
+      showToast(
+        `✅ Verified - Batch ${searchResults.id} successfully verified on blockchain!`, 
+        'success'
+      );
+      
+      // Log blockchain verification details
+      console.log('Blockchain Verification Complete:', {
+        batchId: searchResults.id,
+        transactionHash: txHash,
+        verificationData,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('Blockchain verification failed:', error);
+      showToast('Blockchain verification failed. Please try again.', 'error');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -182,9 +298,16 @@ const VerificationReport = ({ user, showToast }) => {
               </div>
               
               <div className="flex items-center gap-2">
-                <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
-                  <span className="text-emerald-300 text-sm font-medium">Ready for Verification</span>
-                </div>
+                {searchResults.verificationStatus === 'BLOCKCHAIN_VERIFIED' ? (
+                  <div className="px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-400" />
+                    <span className="text-green-300 text-sm font-medium">✅ Verified - {searchResults.id}</span>
+                  </div>
+                ) : (
+                  <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                    <span className="text-emerald-300 text-sm font-medium">Ready for Verification</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -295,14 +418,108 @@ const VerificationReport = ({ user, showToast }) => {
                   </div>
                 </div>
 
-                {/* Verify Button */}
+                {/* Verification Checkpoints */}
                 <div className="mt-8">
+                  <h4 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                    Verification Checkpoints
+                  </h4>
+                  
+                  <div className="space-y-3 mb-6">
+                    {/* Batch Information Checkpoint */}
+                    <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-200">
+                      <input
+                        type="checkbox"
+                        id="batchInfo"
+                        checked={verificationCheckpoints.batchInfoVerified}
+                        onChange={() => handleCheckpointChange('batchInfoVerified')}
+                        className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                      />
+                      <label htmlFor="batchInfo" className="text-white text-sm font-medium cursor-pointer flex-1">
+                        Batch information accuracy verified (ID, herb type, location, quantity, quality)
+                      </label>
+                      {verificationCheckpoints.batchInfoVerified && (
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      )}
+                    </div>
+
+                    {/* Processing Steps Checkpoint */}
+                    <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-200">
+                      <input
+                        type="checkbox"
+                        id="processingSteps"
+                        checked={verificationCheckpoints.processingStepsVerified}
+                        onChange={() => handleCheckpointChange('processingStepsVerified')}
+                        className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                      />
+                      <label htmlFor="processingSteps" className="text-white text-sm font-medium cursor-pointer flex-1">
+                        Processing steps completed and documented (temperature, duration, progress)
+                      </label>
+                      {verificationCheckpoints.processingStepsVerified && (
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      )}
+                    </div>
+
+                    {/* Lab Results Checkpoint */}
+                    <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-200">
+                      <input
+                        type="checkbox"
+                        id="labResults"
+                        checked={verificationCheckpoints.labResultsVerified}
+                        onChange={() => handleCheckpointChange('labResultsVerified')}
+                        className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                      />
+                      <label htmlFor="labResults" className="text-white text-sm font-medium cursor-pointer flex-1">
+                        Lab test results reviewed and approved (pesticide screening passed)
+                      </label>
+                      {verificationCheckpoints.labResultsVerified && (
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      )}
+                    </div>
+
+                    {/* Blockchain Ready Checkpoint */}
+                    <div className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-all duration-200">
+                      <input
+                        type="checkbox"
+                        id="blockchainReady"
+                        checked={verificationCheckpoints.blockchainReadyVerified}
+                        onChange={() => handleCheckpointChange('blockchainReadyVerified')}
+                        className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2"
+                      />
+                      <label htmlFor="blockchainReady" className="text-white text-sm font-medium cursor-pointer flex-1">
+                        All data verified and ready for blockchain immutable record
+                      </label>
+                      {verificationCheckpoints.blockchainReadyVerified && (
+                        <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Verify Button */}
+                <div className="mt-6">
                   <button
                     onClick={handleVerify}
-                    className="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+                    disabled={isVerifying || !areAllCheckpointsCompleted()}
+                    className={`w-full px-6 py-4 ${
+                      isVerifying 
+                        ? 'bg-gradient-to-r from-gray-600 to-gray-700 cursor-not-allowed' 
+                        : !areAllCheckpointsCompleted()
+                        ? 'bg-gradient-to-r from-gray-500 to-gray-600 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600'
+                    } text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl`}
                   >
-                    <Shield className="w-6 h-6" />
-                    Verify Batch
+                    {isVerifying ? (
+                      <>
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Verifying on Blockchain...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className="w-6 h-6" />
+                        {areAllCheckpointsCompleted() ? 'Verify Batch' : 'Complete All Checkpoints'}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
