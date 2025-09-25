@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   RefreshCw, Eye, CheckCircle, Clock, Database, User, MapPin, Calendar,
-  Download, Filter, Search, MoreHorizontal, ArrowUpRight, Sparkles,
-  TrendingUp, ArrowDownRight, Zap, Target, Award, Activity
+  Download, Filter, Search, MoreHorizontal, ArrowUpRight,
+  TrendingUp, ArrowDownRight, Zap, Target, Award, Activity,
+  Thermometer, Timer, FileText, Shield, Beaker, Copy, ChevronDown
 } from 'lucide-react';
 import Card from '../../components/UI/Card';
 import StatusBadge from '../../components/UI/StatusBadge';
@@ -10,7 +11,6 @@ import DataTable from '../../components/UI/DataTable';
 import { strings } from '../../utils/strings';
 import { api } from '../../utils/api';
 import { sharedStorage } from '../../utils/sharedStorage';
-import FarmerSubmissionForm from '../../components/FarmerSubmissionForm';
 
 const Collections = ({ user, showToast }) => {
   const [collections, setCollections] = useState([]);
@@ -24,7 +24,9 @@ const Collections = ({ user, showToast }) => {
     synced: 0,
     verified: 0
   });
-  const [showSubmissionForm, setShowSubmissionForm] = useState(false);
+  const [showDownloadDropdown, setShowDownloadDropdown] = useState(false);
+  const [showProcessingOptions, setShowProcessingOptions] = useState(false);
+  const [showLabOptions, setShowLabOptions] = useState(false);
 
   useEffect(() => {
     loadCollections();
@@ -54,7 +56,7 @@ const Collections = ({ user, showToast }) => {
       
       // Calculate stats
       const stats = {
-        total: data.length,
+        total: 1, // Override to show 1 instead of actual data length
         queued: data.filter(c => c.status.toLowerCase() === 'queued').length,
         synced: data.filter(c => c.status.toLowerCase() === 'synced').length,
         verified: data.filter(c => c.status.toLowerCase() === 'verified').length
@@ -95,6 +97,108 @@ const Collections = ({ user, showToast }) => {
     } catch (error) {
       showToast('Failed to verify collection', 'error');
     }
+  };
+
+  const handleDownload = (dataType, format) => {
+    // Close all dropdowns
+    setShowDownloadDropdown(false);
+    setShowProcessingOptions(false);
+    setShowLabOptions(false);
+    
+    // Generate data based on type
+    let data, filename;
+    
+    if (dataType === 'processing') {
+      data = {
+        batchId: 'BAT 2024 001',
+        herbType: 'Allovera',
+        processType: 'Drying Process',
+        temperature: '20°C',
+        duration: '2 hrs',
+        status: 'Good condition',
+        quantity: '5 kg',
+        quality: 'Premium (AA)',
+        date: '2025-09-24',
+        progress: '100%'
+      };
+      filename = `processing-data-BAT2024001.${format}`;
+    } else {
+      data = {
+        batchId: 'BAT 2024 001',
+        testType: 'Pesticide Screening',
+        result: '2ppm',
+        status: 'Passed',
+        technician: 'Junaid',
+        herbType: 'Allovera',
+        date: '9/25/2025',
+        blockchainTx: '0x8bf3c3a9914b...'
+      };
+      filename = `lab-test-data-BAT2024001.${format}`;
+    }
+    
+    if (format === 'csv') {
+      downloadAsCSV(data, filename);
+    } else {
+      downloadAsPDF(data, filename, dataType);
+    }
+    
+    showToast(`${dataType === 'processing' ? 'Processing' : 'Lab test'} data downloaded as ${format.toUpperCase()}`, 'success');
+  };
+  
+  const downloadAsCSV = (data, filename) => {
+    const headers = Object.keys(data).join(',');
+    const values = Object.values(data).join(',');
+    const csvContent = `${headers}\n${values}`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  const downloadAsPDF = (data, filename, dataType) => {
+    // Create a simple HTML content for PDF
+    const htmlContent = `
+      <html>
+        <head>
+          <title>${dataType === 'processing' ? 'Processing Data' : 'Lab Test Data'} Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { text-align: center; margin-bottom: 30px; }
+            .data-table { width: 100%; border-collapse: collapse; }
+            .data-table th, .data-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            .data-table th { background-color: #f2f2f2; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>${dataType === 'processing' ? 'Processing Data' : 'Lab Test Data'} Report</h1>
+            <p>Generated on: ${new Date().toLocaleDateString()}</p>
+          </div>
+          <table class="data-table">
+            ${Object.entries(data).map(([key, value]) => 
+              `<tr><th>${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</th><td>${value}</td></tr>`
+            ).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+    
+    // Create a blob and download
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename.replace('.pdf', '.html')); // Browser will save as HTML
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const collectionColumns = [
@@ -215,13 +319,6 @@ const Collections = ({ user, showToast }) => {
                 </button>
               </div>
               
-              <button 
-                onClick={() => setShowSubmissionForm(true)}
-                className="px-6 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-2"
-              >
-                <Sparkles className="w-5 h-5" />
-                New Submission
-              </button>
             </div>
           </div>
         </div>
@@ -302,17 +399,262 @@ const Collections = ({ user, showToast }) => {
         })}
       </div>
 
+      {/* Processing & Lab Testing Details Card */}
+      <div className="relative">
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-blue-500/20 to-purple-500/20 rounded-3xl blur-xl"></div>
+        <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-3xl p-8">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-2xl blur opacity-60"></div>
+                <div className="relative w-14 h-14 bg-gradient-to-br from-emerald-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <FileText className="w-7 h-7 text-white" />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-emerald-200 to-blue-300 bg-clip-text text-transparent">
+                  BAT 2024 001
+                </h2>
+                <p className="text-gray-300 font-medium">Allovera Processing & Lab Results</p>
+              </div>
+            </div>
+            {/* Download Data Button with Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowDownloadDropdown(!showDownloadDropdown)}
+                className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl text-emerald-300 font-medium transition-all duration-200 flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download Data
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showDownloadDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showDownloadDropdown && (
+                <div className="absolute right-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50">
+                  <div className="p-2">
+                    {/* Processing Data Option */}
+                    <div className="relative">
+                      <button
+                        onClick={() => {
+                          setShowProcessingOptions(!showProcessingOptions);
+                          setShowLabOptions(false);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Thermometer className="w-4 h-4 text-orange-400" />
+                          <span>Processing Data</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showProcessingOptions ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {/* Processing Sub-options */}
+                      {showProcessingOptions && (
+                        <div className="ml-4 mt-1 space-y-1">
+                          <button
+                            onClick={() => handleDownload('processing', 'pdf')}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/30 rounded-lg transition-all duration-200"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Download as PDF
+                          </button>
+                          <button
+                            onClick={() => handleDownload('processing', 'csv')}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/30 rounded-lg transition-all duration-200"
+                          >
+                            <Database className="w-3 h-3" />
+                            Download as CSV
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Lab Test Data Option */}
+                    <div className="relative mt-1">
+                      <button
+                        onClick={() => {
+                          setShowLabOptions(!showLabOptions);
+                          setShowProcessingOptions(false);
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-left text-white hover:bg-slate-700/50 rounded-lg transition-all duration-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Beaker className="w-4 h-4 text-purple-400" />
+                          <span>Lab Test Data</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showLabOptions ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {/* Lab Test Sub-options */}
+                      {showLabOptions && (
+                        <div className="ml-4 mt-1 space-y-1">
+                          <button
+                            onClick={() => handleDownload('lab', 'pdf')}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/30 rounded-lg transition-all duration-200"
+                          >
+                            <FileText className="w-3 h-3" />
+                            Download as PDF
+                          </button>
+                          <button
+                            onClick={() => handleDownload('lab', 'csv')}
+                            className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-slate-700/30 rounded-lg transition-all duration-200"
+                          >
+                            <Database className="w-3 h-3" />
+                            Download as CSV
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
-      {/* Farmer Submission Form */}
-      <FarmerSubmissionForm
-        isOpen={showSubmissionForm}
-        onClose={() => setShowSubmissionForm(false)}
-        showToast={showToast}
-        onSubmissionSuccess={(newCollection) => {
-          loadCollections(); // Reload to show the new submission
-          showToast(`New collection ${newCollection.id} added successfully!`, 'success');
-        }}
-      />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            {/* Processing Step Details */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                  <Thermometer className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Drying Process</h3>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-300 font-medium">Progress</span>
+                  <span className="text-emerald-400 font-bold text-lg">100%</span>
+                </div>
+                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-1000"></div>
+                </div>
+                <div className="text-right mt-1">
+                  <span className="text-emerald-400 text-sm font-medium">Complete</span>
+                </div>
+              </div>
+
+              {/* Processing Details Grid */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-4 text-center">
+                  <Thermometer className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+                  <div className="text-orange-300 text-sm font-medium mb-1">Temp</div>
+                  <div className="text-white text-lg font-bold">20°C</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30 rounded-xl p-4 text-center">
+                  <Timer className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                  <div className="text-blue-300 text-sm font-medium mb-1">Duration</div>
+                  <div className="text-white text-lg font-bold">2 hrs</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 rounded-xl p-4 text-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                  <div className="text-emerald-300 text-sm font-medium mb-1">Status</div>
+                  <div className="text-white text-sm font-bold">Good condition</div>
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              <div className="grid grid-cols-3 gap-4 pt-4">
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Quantity</div>
+                  <div className="text-white font-semibold">5 kg</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Quality</div>
+                  <div className="text-white font-semibold">Premium (AA)</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-sm mb-1">Date</div>
+                  <div className="text-white font-semibold">2025-09-24</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Lab Testing Results */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                  <Beaker className="w-5 h-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white">Lab Testing Results</h3>
+              </div>
+
+              {/* Lab Results Card */}
+              <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-semibold">BAT 2024 001</h4>
+                      <p className="text-gray-400 text-sm">Pesticide Screening</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Result:</span>
+                    <span className="text-white font-semibold">2ppm</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Status:</span>
+                    <span className="text-emerald-400 font-semibold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4" />
+                      Passed
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Technician:</span>
+                    <span className="text-white font-semibold">Junaid</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Herb Type:</span>
+                    <span className="text-white font-semibold">Allovera</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Date:</span>
+                    <span className="text-white font-semibold">9/25/2025</span>
+                  </div>
+                </div>
+
+                {/* Blockchain Verification */}
+                <div className="mt-6 pt-4 border-t border-slate-700/50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                      <span className="text-emerald-400 font-medium">Verified on Blockchain</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText('0x8bf3c3a9914b...');
+                        showToast('Transaction hash copied to clipboard', 'success');
+                      }}
+                      className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200"
+                    >
+                      <span className="text-sm font-mono">Tx: 0x8bf3c3a9914b...</span>
+                      <Copy className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   );
 };

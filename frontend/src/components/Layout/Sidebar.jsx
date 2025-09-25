@@ -6,7 +6,6 @@ import {
   Settings, 
   Database,
   Beaker,
-  BarChart3,
   Leaf,
   Users,
   Shield,
@@ -31,7 +30,6 @@ const Sidebar = ({ user }) => {
     const roleSpecificItems = {
       'Admin': [
         { path: '/collections', icon: Database, label: strings.nav.collections },
-        { path: '/reports', icon: BarChart3, label: strings.nav.reports },
         { path: '/settings', icon: Settings, label: strings.nav.settings }
       ],
       'Processor': [
@@ -43,7 +41,7 @@ const Sidebar = ({ user }) => {
         { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [
-        { path: '/reports', icon: Shield, label: 'Certifications' }
+        // Removed reports/certifications item
       ]
     };
 
