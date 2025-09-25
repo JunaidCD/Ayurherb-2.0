@@ -11,7 +11,8 @@ import {
   Shield,
   Plus,
   Eye,
-  FileCheck
+  FileCheck,
+  Search
 } from 'lucide-react';
 import { strings } from '../../utils/strings';
 
@@ -24,7 +25,7 @@ const Sidebar = ({ user }) => {
         path: '/dashboard', 
         icon: LayoutDashboard, 
         label: strings.nav.dashboard,
-        roles: ['Admin', 'Processor', 'Lab Tester', 'Customer']
+        roles: ['Admin', 'Processor', 'Lab Tester']
       }
     ];
 
@@ -43,11 +44,16 @@ const Sidebar = ({ user }) => {
         { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [
-        // Removed reports/certifications item
+        { path: '/view-product', icon: Search, label: 'View Product' }
       ]
     };
 
-    return [...baseItems, ...(roleSpecificItems[user?.role] || [])];
+    // Filter base items by user role
+    const filteredBaseItems = baseItems.filter(item => 
+      !item.roles || item.roles.includes(user?.role)
+    );
+    
+    return [...filteredBaseItems, ...(roleSpecificItems[user?.role] || [])];
   };
 
   const navigationItems = getNavigationItems();

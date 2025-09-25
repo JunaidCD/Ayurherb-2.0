@@ -16,6 +16,7 @@ import SeeItem from './pages/SeeItem/SeeItem';
 import BatchDetails from './pages/Lab/BatchDetails';
 import AddProcessingAdvanced from './pages/Processing/AddProcessingAdvanced';
 import VerificationReport from './pages/VerificationReport/VerificationReport';
+import ViewProduct from './pages/ViewProduct/ViewProduct';
 import Toast from './components/UI/Toast';
 
 function App() {
@@ -58,7 +59,7 @@ function App() {
       case 'Lab Tester':
         return <LabDashboard user={user} showToast={showToast} />;
       case 'Customer':
-        return <CustomerPortal user={user} showToast={showToast} />;
+        return <Navigate to="/view-product" />;
       default:
         return <Navigate to="/login" />;
     }
@@ -188,6 +189,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <AddProcessingAdvanced user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/view-product" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <ViewProduct user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />

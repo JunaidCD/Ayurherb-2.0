@@ -118,6 +118,94 @@ let mockCollections = [
     location: '18.9123°, 77.5123° (Protected forest)',
     qualityGrade: 'Premium (AA)',
     qualityAssessment: 'Premium (AA)'
+  },
+  {
+    id: 'COL005',
+    batchId: 'BAT-2025-012',
+    collectorId: 'COL-103',
+    farmer: 'Priya Sharma',
+    herb: 'Turmeric',
+    speciesName: 'Curcuma longa',
+    quantity: '750kg',
+    weight: '750kg',
+    moisture: '12%',
+    gpsCoordinates: '11.1271°, 78.6569°',
+    latitude: '11.1271°',
+    longitude: '78.6569°',
+    accuracy: '±45 meters',
+    collectionTime: '9/20/2025, 07:30:00 AM',
+    submissionDate: '2025-09-20',
+    timestamp: '9/20/2025, 07:30:00 AM',
+    status: 'Verified',
+    location: 'Tamil Nadu, India',
+    qualityGrade: 'Premium (AA)',
+    qualityAssessment: 'Premium (AA)'
+  },
+  {
+    id: 'COL006',
+    batchId: 'BAT-2025-013',
+    collectorId: 'COL-104',
+    farmer: 'Amit Singh',
+    herb: 'Neem',
+    speciesName: 'Azadirachta indica',
+    quantity: '400kg',
+    weight: '400kg',
+    moisture: '14%',
+    gpsCoordinates: '26.9124°, 75.7873°',
+    latitude: '26.9124°',
+    longitude: '75.7873°',
+    accuracy: '±60 meters',
+    collectionTime: '9/19/2025, 09:15:00 AM',
+    submissionDate: '2025-09-19',
+    timestamp: '9/19/2025, 09:15:00 AM',
+    status: 'Verified',
+    location: 'Rajasthan, India',
+    qualityGrade: 'Standard (A)',
+    qualityAssessment: 'Standard (A)'
+  },
+  {
+    id: 'COL007',
+    batchId: 'BAT-2025-014',
+    collectorId: 'COL-105',
+    farmer: 'Lakshmi Devi',
+    herb: 'Tulsi',
+    speciesName: 'Ocimum sanctum',
+    quantity: '200kg',
+    weight: '200kg',
+    moisture: '16%',
+    gpsCoordinates: '15.3173°, 75.7139°',
+    latitude: '15.3173°',
+    longitude: '75.7139°',
+    accuracy: '±35 meters',
+    collectionTime: '9/18/2025, 06:45:00 AM',
+    submissionDate: '2025-09-18',
+    timestamp: '9/18/2025, 06:45:00 AM',
+    status: 'Verified',
+    location: 'Karnataka, India',
+    qualityGrade: 'Premium (AA)',
+    qualityAssessment: 'Premium (AA)'
+  },
+  {
+    id: 'COL008',
+    batchId: 'BAT-2025-015',
+    collectorId: 'COL-106',
+    farmer: 'Ravi Kumar',
+    herb: 'Ginger',
+    speciesName: 'Zingiber officinale',
+    quantity: '600kg',
+    weight: '600kg',
+    moisture: '18%',
+    gpsCoordinates: '9.9312°, 76.2673°',
+    latitude: '9.9312°',
+    longitude: '76.2673°',
+    accuracy: '±55 meters',
+    collectionTime: '9/17/2025, 08:20:00 AM',
+    submissionDate: '2025-09-17',
+    timestamp: '9/17/2025, 08:20:00 AM',
+    status: 'Verified',
+    location: 'Kerala, India',
+    qualityGrade: 'Standard (A)',
+    qualityAssessment: 'Standard (A)'
   }
 ];
 
@@ -167,10 +255,16 @@ const getProcessingBatches = () => {
 };
 
 const mockStats = {
-  totalCollections: 1247,
+  totalCollections: 1547,
   verifiedBatches: 1089,
+  activeFarmers: 234,
+  qualityScore: 94.2,
   recalledBatches: 23,
   pendingTests: 135,
+  processingEfficiency: 94,
+  qualityCompliance: 98,
+  supplyChainSpeed: 87,
+  farmerSatisfaction: 92,
   environmentalImpact: {
     carbonFootprint: 2.4,
     waterUsage: 1250,
@@ -179,12 +273,12 @@ const mockStats = {
 };
 
 const mockChartData = [
-  { month: 'Jan', harvest: 2400, processed: 2100, verified: 1900 },
-  { month: 'Feb', harvest: 1398, processed: 1200, verified: 1100 },
-  { month: 'Mar', harvest: 9800, processed: 8900, verified: 8200 },
-  { month: 'Apr', harvest: 3908, processed: 3500, verified: 3200 },
-  { month: 'May', harvest: 4800, processed: 4300, verified: 4000 },
-  { month: 'Jun', harvest: 3800, processed: 3400, verified: 3100 }
+  { month: 'Jan', harvest: 420, processed: 380, verified: 340 },
+  { month: 'Feb', harvest: 520, processed: 480, verified: 450 },
+  { month: 'Mar', harvest: 680, processed: 620, verified: 580 },
+  { month: 'Apr', harvest: 780, processed: 720, verified: 680 },
+  { month: 'May', harvest: 920, processed: 850, verified: 800 },
+  { month: 'Jun', harvest: 1100, processed: 1020, verified: 980 }
 ];
 
 // API Functions
