@@ -8,6 +8,7 @@ import LabDashboard from './pages/Lab/LabDashboard';
 import CustomerPortal from './pages/Customer/CustomerPortal';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
 import Information from './pages/Customer/Information';
+import QRDetails from './pages/QRDetails/QRDetails';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
@@ -222,6 +223,12 @@ function App() {
                 <Navigate to="/login" />
               )
             } 
+          />
+          
+          {/* QR Details - Public route for scanning */}
+          <Route 
+            path="/qr-details" 
+            element={<QRDetails />} 
           />
           
           {/* Test routes - no auth required */}

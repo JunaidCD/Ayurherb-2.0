@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Filter, SortAsc, Eye, Star, MapPin, Calendar, User, Activity } from 'lucide-react';
+import { Search, Package, Filter, SortAsc, Eye, Star, MapPin, Calendar, User, Activity, Shield } from 'lucide-react';
 import Card from '../../components/UI/Card';
 import { api } from '../../utils/api';
 
@@ -11,6 +11,8 @@ const ViewProduct = ({ user, showToast }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [sortBy, setSortBy] = useState('name');
   const [filterBy, setFilterBy] = useState('all');
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrData, setQrData] = useState(null);
 
   useEffect(() => {
     loadProducts();
@@ -119,6 +121,76 @@ const ViewProduct = ({ user, showToast }) => {
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleAloveraClick = () => {
+    const aloveraData = {
+      batchInfo: {
+        batchId: "BAT 2024 001",
+        herbType: "Allovera",
+        location: "21.0397°, 88.4400°",
+        quantity: "5 kg",
+        quality: "Premium (A++)",
+        harvestDate: "2025-09-22"
+      },
+      dryingProcess: {
+        temperature: "20°C",
+        duration: "2 hrs",
+        progress: "100%"
+      },
+      labTesting: {
+        testType: "Pesticide Screening",
+        result: "2 ppm",
+        status: "Passed",
+        testDate: "9/25/2025"
+      },
+      verification: {
+        status: "Verified on Blockchain",
+        blockchainRef: "0xbF73c399",
+        certification: "Ayush Certified"
+      }
+    };
+    
+    setQrData(aloveraData);
+    setShowQRModal(true);
+  };
+
+  const generateQRCodeURL = (data) => {
+    // Create formatted text data for QR code
+    const qrText = `
+🌿 AYURHERB PRODUCT DETAILS 🌿
+
+📦 BATCH INFORMATION:
+Batch ID: ${data.batchInfo.batchId}
+Herb Type: ${data.batchInfo.herbType}
+Location: ${data.batchInfo.location}
+Quantity: ${data.batchInfo.quantity}
+Quality: ${data.batchInfo.quality}
+Harvest Date: ${data.batchInfo.harvestDate}
+
+🔥 DRYING PROCESS:
+Temperature: ${data.dryingProcess.temperature}
+Duration: ${data.dryingProcess.duration}
+Progress: ${data.dryingProcess.progress}
+
+🧪 LAB TESTING RESULTS:
+Test Type: ${data.labTesting.testType}
+Result: ${data.labTesting.result}
+Status: ${data.labTesting.status}
+Test Date: ${data.labTesting.testDate}
+
+🔐 VERIFICATION:
+${data.verification.status}
+Blockchain Ref: ${data.verification.blockchainRef}
+${data.verification.certification}
+
+Authentic Ayurvedic Product
+Quality Assured
+Blockchain Verified
+    `.trim();
+    
+    const encodedData = encodeURIComponent(qrText);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedData}`;
   };
 
   const getStatusColor = (status) => {
@@ -325,7 +397,10 @@ const ViewProduct = ({ user, showToast }) => {
                   {['Ashwagandha', 'Turmeric', 'Brahmi', 'Neem', 'Allovera'].map((suggestion, index) => (
                     <div
                       key={suggestion}
-                      className="group px-4 py-2 bg-gradient-to-r from-primary-500/20 to-emerald-500/20 hover:from-primary-500/30 hover:to-emerald-500/30 border border-primary-500/30 hover:border-primary-500/50 rounded-full text-primary-300 hover:text-primary-200 font-medium transition-all duration-300 transform hover:scale-105 cursor-default"
+                      onClick={suggestion === 'Allovera' ? handleAloveraClick : undefined}
+                      className={`group px-4 py-2 bg-gradient-to-r from-primary-500/20 to-emerald-500/20 hover:from-primary-500/30 hover:to-emerald-500/30 border border-primary-500/30 hover:border-primary-500/50 rounded-full text-primary-300 hover:text-primary-200 font-medium transition-all duration-300 transform hover:scale-105 ${
+                        suggestion === 'Allovera' ? 'cursor-pointer' : 'cursor-default'
+                      }`}
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
                       <span className="relative">Try "{suggestion}"</span>
@@ -507,6 +582,105 @@ const ViewProduct = ({ user, showToast }) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {showQRModal && qrData && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative max-w-md w-full">
+            <div className="absolute -inset-2 bg-gradient-to-r from-primary-500/30 via-blue-500/30 to-emerald-500/30 rounded-3xl blur-xl"></div>
+            <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+              
+              {/* Close Button */}
+              <button
+                onClick={() => setShowQRModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded-full flex items-center justify-center text-red-400 hover:text-red-300 transition-all duration-200"
+              >
+                ✕
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-white via-primary-200 to-emerald-300 bg-clip-text text-transparent mb-2">
+                  Allovera Product Details
+                </h3>
+                <p className="text-gray-300 text-sm">Scan the QR code to see details</p>
+              </div>
+
+              {/* QR Code */}
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="absolute -inset-2 bg-white/20 rounded-2xl blur"></div>
+                  <div className="relative bg-white p-4 rounded-2xl">
+                    <img 
+                      src={generateQRCodeURL(qrData)} 
+                      alt="QR Code for Allovera Details"
+                      className="w-64 h-64 object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* QR Instructions */}
+              <div className="text-center mb-6">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <p className="text-emerald-300 font-medium text-sm">
+                    Scan with any QR code reader
+                  </p>
+                </div>
+                <p className="text-slate-400 text-xs">
+                  The QR code contains complete product details and verification information
+                </p>
+              </div>
+
+              {/* Product Details Preview */}
+              <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-xl p-4 border border-slate-600/30 mb-6">
+                <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4 text-emerald-400" />
+                  Batch Information
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Batch ID:</span>
+                    <span className="text-white font-medium">{qrData.batchInfo.batchId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Herb Type:</span>
+                    <span className="text-white font-medium">{qrData.batchInfo.herbType}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Quality:</span>
+                    <span className="text-emerald-400 font-medium">{qrData.batchInfo.quality}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Quantity:</span>
+                    <span className="text-white font-medium">{qrData.batchInfo.quantity}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-primary-500 hover:from-emerald-600 hover:to-primary-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 transform hover:scale-105">
+                  <Package className="w-4 h-4" />
+                  Add Item to Cart
+                </button>
+                
+                <button className="w-full px-6 py-3 bg-gradient-to-r from-primary-500 to-blue-500 hover:from-primary-600 hover:to-blue-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 transform hover:scale-105">
+                  <Star className="w-4 h-4" />
+                  Buy Now
+                </button>
+              </div>
+
+              {/* Verification Badge */}
+              <div className="mt-4 flex items-center justify-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <Shield className="w-5 h-5 text-emerald-400" />
+                <span className="text-emerald-300 font-medium text-sm">Blockchain Verified • Ayush Certified</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
