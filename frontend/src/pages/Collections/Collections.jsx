@@ -414,9 +414,21 @@ const Collections = ({ user, showToast }) => {
                 </div>
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-emerald-200 to-blue-300 bg-clip-text text-transparent">
-                  BAT 2024 001
-                </h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white via-emerald-200 to-blue-300 bg-clip-text text-transparent">
+                    BAT 2024 001
+                  </h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText('BAT 2024 001');
+                      showToast('Batch ID copied to clipboard!', 'success');
+                    }}
+                    className="p-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-all duration-200 group"
+                    title="Copy Batch ID"
+                  >
+                    <Copy className="w-4 h-4 text-gray-400 group-hover:text-white transition-colors duration-200" />
+                  </button>
+                </div>
                 <p className="text-gray-300 font-medium">Allovera Processing & Lab Results</p>
               </div>
             </div>
