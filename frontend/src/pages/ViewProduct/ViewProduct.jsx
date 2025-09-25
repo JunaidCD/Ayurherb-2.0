@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Package, Filter, SortAsc, Eye, Star, MapPin, Calendar, User } from 'lucide-react';
+import { Search, Package, Filter, SortAsc, Eye, Star, MapPin, Calendar, User, Activity } from 'lucide-react';
 import Card from '../../components/UI/Card';
 import { api } from '../../utils/api';
 
@@ -71,46 +71,50 @@ const ViewProduct = ({ user, showToast }) => {
   };
 
   const filterProducts = () => {
+    // If no search query, show empty results to display search message
+    if (!searchQuery.trim()) {
+      setFilteredProducts([]);
+      return;
+    }
+
     let filtered = [...products];
 
     // Search filter
-    if (searchQuery.trim()) {
-      setSearchLoading(true);
-      setTimeout(() => {
-        filtered = filtered.filter(product =>
-          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.farmer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.location.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setSearchLoading(false);
-      }, 500);
-    }
-
-    // Status filter
-    if (filterBy !== 'all') {
-      filtered = filtered.filter(product => 
-        product.status.toLowerCase() === filterBy.toLowerCase()
+    setSearchLoading(true);
+    setTimeout(() => {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.batchId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.farmer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.location.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    }
 
-    // Sort
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'quality':
-          return (b.qualityScore || 0) - (a.qualityScore || 0);
-        case 'date':
-          return new Date(b.harvestDate) - new Date(a.harvestDate);
-        case 'farmer':
-          return a.farmer.localeCompare(b.farmer);
-        default:
-          return 0;
+      // Status filter
+      if (filterBy !== 'all') {
+        filtered = filtered.filter(product => 
+          product.status.toLowerCase() === filterBy.toLowerCase()
+        );
       }
-    });
 
-    setFilteredProducts(filtered);
+      // Sort
+      filtered.sort((a, b) => {
+        switch (sortBy) {
+          case 'name':
+            return a.name.localeCompare(b.name);
+          case 'quality':
+            return (b.qualityScore || 0) - (a.qualityScore || 0);
+          case 'date':
+            return new Date(b.harvestDate) - new Date(a.harvestDate);
+          case 'farmer':
+            return a.farmer.localeCompare(b.farmer);
+          default:
+            return 0;
+        }
+      });
+
+      setFilteredProducts(filtered);
+      setSearchLoading(false);
+    }, 500);
   };
 
   const handleSearch = (e) => {
@@ -220,35 +224,75 @@ const ViewProduct = ({ user, showToast }) => {
             )}
           </div>
 
-          {/* Filters and Sort */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
-              <select
-                value={filterBy}
-                onChange={(e) => setFilterBy(e.target.value)}
-                className="px-3 py-2 bg-dark-700/50 border border-dark-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-              >
-                <option value="all">All Status</option>
-                <option value="verified">Verified</option>
-                <option value="processing">Processing</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
+          {/* Advanced Filters and Sort */}
+          <div className="flex flex-wrap items-center gap-6">
+            {/* Advanced Filter Dropdown */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-xl border border-slate-600/50 rounded-xl shadow-lg group-hover:border-blue-500/50 transition-all duration-300">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border border-blue-500/30 group-hover:from-blue-500/30 group-hover:to-purple-500/30 transition-all duration-300">
+                  <Filter className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
+                </div>
+                <div className="relative">
+                  <select
+                    value={filterBy}
+                    onChange={(e) => setFilterBy(e.target.value)}
+                    className="appearance-none bg-transparent text-white font-semibold text-sm cursor-pointer focus:outline-none pr-8 min-w-[120px]"
+                  >
+                    <option value="all" className="bg-slate-800 text-white py-2">🌟 All Status</option>
+                    <option value="verified" className="bg-slate-800 text-white py-2">✅ Verified</option>
+                    <option value="processing" className="bg-slate-800 text-white py-2">⚡ Processing</option>
+                    <option value="pending" className="bg-slate-800 text-white py-2">⏳ Pending</option>
+                    <option value="completed" className="bg-slate-800 text-white py-2">🎉 Completed</option>
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-md flex items-center justify-center border border-blue-500/30">
+                      <svg className="w-3 h-3 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <SortAsc className="w-4 h-4 text-gray-400" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 bg-dark-700/50 border border-dark-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
-              >
-                <option value="name">Sort by Name</option>
-                <option value="quality">Sort by Quality</option>
-                <option value="date">Sort by Date</option>
-                <option value="farmer">Sort by Farmer</option>
-              </select>
+            {/* Advanced Sort Dropdown */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-primary-500/20 to-cyan-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-800/90 to-slate-700/90 backdrop-blur-xl border border-slate-600/50 rounded-xl shadow-lg group-hover:border-emerald-500/50 transition-all duration-300">
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-primary-500/20 rounded-lg flex items-center justify-center border border-emerald-500/30 group-hover:from-emerald-500/30 group-hover:to-primary-500/30 transition-all duration-300">
+                  <SortAsc className="w-4 h-4 text-emerald-400 group-hover:text-emerald-300" />
+                </div>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="appearance-none bg-transparent text-white font-semibold text-sm cursor-pointer focus:outline-none pr-8 min-w-[140px]"
+                  >
+                    <option value="name" className="bg-slate-800 text-white py-2">🔤 Sort by Name</option>
+                    <option value="quality" className="bg-slate-800 text-white py-2">⭐ Sort by Quality</option>
+                    <option value="date" className="bg-slate-800 text-white py-2">📅 Sort by Date</option>
+                    <option value="farmer" className="bg-slate-800 text-white py-2">👨‍🌾 Sort by Farmer</option>
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <div className="w-6 h-6 bg-gradient-to-br from-emerald-500/20 to-primary-500/20 rounded-md flex items-center justify-center border border-emerald-500/30">
+                      <svg className="w-3 h-3 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Filter Results Counter */}
+            <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-slate-700/50 to-slate-600/50 rounded-lg border border-slate-500/30">
+              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+              <span className="text-slate-300 text-sm font-medium">
+                {searchQuery ? `${filteredProducts.length} ${filteredProducts.length === 1 ? 'Product' : 'Products'}` : 'Start searching...'}
+              </span>
             </div>
           </div>
         </div>
@@ -256,102 +300,209 @@ const ViewProduct = ({ user, showToast }) => {
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="text-center py-16">
-          <div className="w-24 h-24 bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Package className="w-12 h-12 text-gray-400" />
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-2">No Products Found</h3>
-          <p className="text-gray-400">
-            {searchQuery 
-              ? `No products match your search "${searchQuery}"`
-              : "No products available at the moment"
-            }
-          </p>
+        <div className="text-center py-20">
+          {!searchQuery ? (
+            // Search prompt when no search query
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-primary-500/10 via-blue-500/10 to-emerald-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-white/5 via-white/2 to-transparent backdrop-blur-xl border border-white/10 rounded-3xl p-12 max-w-2xl mx-auto">
+                <div className="relative mb-8">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-primary-500/30 to-emerald-500/30 rounded-3xl blur opacity-50 animate-pulse"></div>
+                  <div className="relative w-32 h-32 bg-gradient-to-br from-primary-500/20 to-emerald-500/20 rounded-3xl flex items-center justify-center mx-auto border border-primary-500/30 backdrop-blur-sm">
+                    <Search className="w-16 h-16 text-primary-400" />
+                  </div>
+                </div>
+                
+                <h3 className="text-3xl font-black bg-gradient-to-r from-white via-primary-200 to-emerald-300 bg-clip-text text-transparent mb-4">
+                  Search for Products
+                </h3>
+                
+                <p className="text-xl text-gray-300 mb-6 leading-relaxed">
+                  Start typing in the search bar above to discover our premium ayurvedic products
+                </p>
+                
+                <div className="flex flex-wrap justify-center gap-3 mb-8">
+                  {['Ashwagandha', 'Turmeric', 'Brahmi', 'Neem', 'Allovera'].map((suggestion, index) => (
+                    <div
+                      key={suggestion}
+                      className="group px-4 py-2 bg-gradient-to-r from-primary-500/20 to-emerald-500/20 hover:from-primary-500/30 hover:to-emerald-500/30 border border-primary-500/30 hover:border-primary-500/50 rounded-full text-primary-300 hover:text-primary-200 font-medium transition-all duration-300 transform hover:scale-105 cursor-default"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <span className="relative">Try "{suggestion}"</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex items-center justify-center gap-4 text-sm text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span>Search by name</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <span>Search by farmer</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
+                    <span>Search by location</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // No results found for search query
+            <div className="relative">
+              <div className="absolute -inset-4 bg-gradient-to-r from-red-500/10 via-orange-500/10 to-yellow-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-gradient-to-br from-white/5 via-white/2 to-transparent backdrop-blur-xl border border-white/10 rounded-3xl p-12 max-w-xl mx-auto">
+                <div className="w-24 h-24 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-orange-500/30">
+                  <Package className="w-12 h-12 text-orange-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-4">No Products Found</h3>
+                <p className="text-gray-300 mb-6">
+                  No products match your search "<span className="text-primary-400 font-semibold">{searchQuery}</span>"
+                </p>
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="px-6 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105"
+                >
+                  Clear Search
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProducts.map((product, index) => (
             <div
               key={product.id}
-              className="group transform transition-all duration-500 hover:scale-105"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="group transform transition-all duration-700 hover:scale-[1.02] hover:-translate-y-2"
+              style={{ 
+                animationDelay: `${index * 150}ms`,
+                animation: 'fadeInUp 0.8s ease-out forwards'
+              }}
             >
-              <div className="relative h-full">
-                {/* Glow effect */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-primary-500/20 via-blue-500/20 to-emerald-500/20 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="relative h-full overflow-hidden">
+                {/* Enhanced Glow effect */}
+                <div className="absolute -inset-2 bg-gradient-to-r from-primary-500/30 via-blue-500/30 to-emerald-500/30 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-primary-400/20 via-blue-400/20 to-emerald-400/20 rounded-2xl blur opacity-20 group-hover:opacity-40 transition-all duration-500"></div>
                 
-                {/* Product card */}
-                <div className="relative h-full bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl group-hover:shadow-2xl transition-all duration-500">
+                {/* Enhanced Product card */}
+                <div className="relative h-full bg-gradient-to-br from-slate-800/90 via-slate-900/80 to-slate-800/90 backdrop-blur-2xl border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl group-hover:shadow-3xl group-hover:border-primary-500/30 transition-all duration-500">
                   
-                  {/* Product Image/Icon */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="text-4xl">{product.image}</div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(product.status)}`}>
-                      {product.status}
-                    </div>
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-white mb-2">{product.name}</h3>
-                    <p className="text-sm text-gray-400 mb-1">Batch: {product.batchId}</p>
-                    <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                      <User className="w-4 h-4" />
-                      <span>{product.farmer}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                      <MapPin className="w-4 h-4" />
-                      <span>{product.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-400">
-                      <Calendar className="w-4 h-4" />
-                      <span>{new Date(product.harvestDate).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-
-                  {/* Quality and Quantity */}
-                  <div className="mb-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Quality Score</span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span className="text-white font-semibold">{product.qualityScore || 'N/A'}</span>
+                  {/* Card Header with gradient background */}
+                  <div className="relative bg-gradient-to-r from-primary-500/10 via-blue-500/10 to-emerald-500/10 p-6 border-b border-slate-700/50">
+                    <div className="flex items-center justify-between mb-3">
+                      {/* Enhanced Product Icon */}
+                      <div className="relative">
+                        <div className="absolute -inset-2 bg-gradient-to-r from-primary-500/30 to-emerald-500/30 rounded-2xl blur opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
+                        <div className="relative w-16 h-16 bg-gradient-to-br from-primary-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center border border-primary-500/30 backdrop-blur-sm">
+                          <span className="text-4xl filter drop-shadow-lg">{product.image}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Enhanced Status Badge */}
+                      <div className={`relative px-4 py-2 rounded-full text-xs font-bold border backdrop-blur-sm ${getStatusColor(product.status)} shadow-lg`}>
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent rounded-full"></div>
+                        <span className="relative">{product.status}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Quantity</span>
-                      <span className="text-white font-semibold">{product.quantity}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-400">Grade</span>
-                      <span className="text-white font-semibold">{product.qualityGrade || 'Pending'}</span>
-                    </div>
+
+                    {/* Product Title */}
+                    <h3 className="text-2xl font-black bg-gradient-to-r from-white via-primary-200 to-emerald-300 bg-clip-text text-transparent mb-2 group-hover:from-primary-300 group-hover:to-emerald-400 transition-all duration-500">
+                      {product.name}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-medium">Batch: <span className="text-primary-400">{product.batchId}</span></p>
                   </div>
 
-                  {/* Processing Steps */}
-                  {product.processingSteps && product.processingSteps.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-400 mb-2">Processing Steps: {product.processingSteps.length}</p>
-                      <div className="flex flex-wrap gap-1">
-                        {product.processingSteps.slice(0, 3).map((step, idx) => (
-                          <span key={idx} className="px-2 py-1 bg-primary-500/20 text-primary-300 text-xs rounded-full">
-                            {step.step || step.stepType}
-                          </span>
-                        ))}
-                        {product.processingSteps.length > 3 && (
-                          <span className="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded-full">
-                            +{product.processingSteps.length - 3} more
-                          </span>
-                        )}
+                  {/* Card Body */}
+                  <div className="p-6 space-y-4">
+                    {/* Product Details with enhanced icons */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/30 hover:bg-slate-700/50 transition-colors duration-300">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg flex items-center justify-center border border-blue-500/30">
+                          <User className="w-4 h-4 text-blue-400" />
+                        </div>
+                        <span className="text-slate-300 font-medium">{product.farmer}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/30 hover:bg-slate-700/50 transition-colors duration-300">
+                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-lg flex items-center justify-center border border-emerald-500/30">
+                          <MapPin className="w-4 h-4 text-emerald-400" />
+                        </div>
+                        <span className="text-slate-300 font-medium">{product.location}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 border border-slate-700/30 hover:bg-slate-700/50 transition-colors duration-300">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center border border-purple-500/30">
+                          <Calendar className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <span className="text-slate-300 font-medium">{new Date(product.harvestDate).toLocaleDateString()}</span>
                       </div>
                     </div>
-                  )}
 
-                  {/* View Button */}
-                  <button className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-primary-500 to-emerald-500 hover:from-primary-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 group-hover:shadow-lg">
-                    <Eye className="w-4 h-4" />
-                    View Details
-                  </button>
+                    {/* Enhanced Quality Metrics */}
+                    <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-xl p-4 border border-slate-600/30 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400 font-medium">Quality Score</span>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-500/20 rounded-lg border border-yellow-500/30">
+                            <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                            <span className="text-yellow-300 font-bold text-sm">{product.qualityScore || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400 font-medium">Quantity</span>
+                        <span className="text-white font-bold bg-primary-500/20 px-3 py-1 rounded-lg border border-primary-500/30">{product.quantity}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-400 font-medium">Grade</span>
+                        <span className="text-emerald-300 font-bold bg-emerald-500/20 px-3 py-1 rounded-lg border border-emerald-500/30">{product.qualityGrade || 'Pending'}</span>
+                      </div>
+                    </div>
+
+                    {/* Enhanced Processing Steps */}
+                    {product.processingSteps && product.processingSteps.length > 0 && (
+                      <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/30 rounded-xl p-4 border border-slate-600/30">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-gradient-to-br from-primary-500/20 to-blue-500/20 rounded-lg flex items-center justify-center border border-primary-500/30">
+                            <Activity className="w-3 h-3 text-primary-400" />
+                          </div>
+                          <p className="text-sm text-slate-300 font-semibold">Processing Steps: {product.processingSteps.length}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {product.processingSteps.slice(0, 3).map((step, idx) => (
+                            <span key={idx} className="px-3 py-1 bg-gradient-to-r from-primary-500/20 to-blue-500/20 text-primary-300 text-xs font-medium rounded-full border border-primary-500/30 hover:from-primary-500/30 hover:to-blue-500/30 transition-all duration-300">
+                              {step.step || step.stepType}
+                            </span>
+                          ))}
+                          {product.processingSteps.length > 3 && (
+                            <span className="px-3 py-1 bg-gradient-to-r from-slate-600/50 to-slate-500/50 text-slate-300 text-xs font-medium rounded-full border border-slate-500/30">
+                              +{product.processingSteps.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Enhanced Action Button */}
+                  <div className="p-6 pt-0">
+                    <button className="group/btn w-full relative overflow-hidden px-6 py-4 bg-gradient-to-r from-primary-500 via-blue-500 to-emerald-500 hover:from-primary-600 hover:via-blue-600 hover:to-emerald-600 text-white font-bold rounded-xl transition-all duration-300 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:shadow-primary-500/25 transform hover:scale-[1.02]">
+                      {/* Button shine effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700"></div>
+                      
+                      <div className="relative flex items-center gap-3">
+                        <div className="w-5 h-5 bg-white/20 rounded-lg flex items-center justify-center">
+                          <Eye className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-bold tracking-wide">View Details</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

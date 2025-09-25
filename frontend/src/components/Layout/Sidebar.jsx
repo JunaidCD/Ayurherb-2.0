@@ -12,7 +12,8 @@ import {
   Plus,
   Eye,
   FileCheck,
-  Search
+  Search,
+  Info
 } from 'lucide-react';
 import { strings } from '../../utils/strings';
 
@@ -44,7 +45,8 @@ const Sidebar = ({ user }) => {
         { path: '/lab-test', icon: Beaker, label: 'Lab Test' }
       ],
       'Customer': [
-        { path: '/view-product', icon: Search, label: 'View Product' }
+        { path: '/view-product', icon: Search, label: 'View Product' },
+        { path: '/information', icon: Info, label: 'Information' }
       ]
     };
 

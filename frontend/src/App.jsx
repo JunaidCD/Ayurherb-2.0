@@ -7,6 +7,7 @@ import ProcessorDashboard from './pages/Processor/ProcessorDashboard';
 import LabDashboard from './pages/Lab/LabDashboard';
 import CustomerPortal from './pages/Customer/CustomerPortal';
 import CustomerDashboard from './pages/Customer/CustomerDashboard';
+import Information from './pages/Customer/Information';
 import Collections from './pages/Collections/Collections';
 import Settings from './pages/Settings/Settings';
 import Batches from './pages/Batches/Batches';
@@ -203,6 +204,19 @@ function App() {
               user ? (
                 <Layout user={user} onLogout={handleLogout}>
                   <ViewProduct user={user} showToast={showToast} />
+                </Layout>
+              ) : (
+                <Navigate to="/login" />
+              )
+            } 
+          />
+          
+          <Route 
+            path="/information" 
+            element={
+              user ? (
+                <Layout user={user} onLogout={handleLogout}>
+                  <Information user={user} showToast={showToast} />
                 </Layout>
               ) : (
                 <Navigate to="/login" />
