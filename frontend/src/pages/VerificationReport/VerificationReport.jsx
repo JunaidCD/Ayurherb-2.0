@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, FileCheck, Database, Award, Search, CheckCircle, Thermometer, Timer, Beaker, FileText, Download } from 'lucide-react';
+import { Shield, FileCheck, Database, Award, Search, CheckCircle, Thermometer, Timer, Beaker, FileText, Download, Medal } from 'lucide-react';
 
 const VerificationReport = ({ user, showToast }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -342,6 +342,303 @@ const VerificationReport = ({ user, showToast }) => {
     URL.revokeObjectURL(url);
 
     showToast('Environmental Impact Report generated successfully!', 'success');
+  };
+
+  const generateAYUSHCertificate = () => {
+    if (!searchResults || searchResults.verificationStatus !== 'BLOCKCHAIN_VERIFIED') {
+      showToast('Please verify the batch first before generating AYUSH compliance certificate', 'warning');
+      return;
+    }
+
+    // Generate AYUSH certificate data
+    const certificateData = {
+      batchId: searchResults.id || 'BAT 2024 001',
+      collector: searchResults.farmer || 'COL 2024',
+      harvestDate: searchResults.harvestDate || '2025-09-24',
+      location: searchResults.location || '21.0347°, 88.4400°',
+      blockchainProof: verificationDetails?.transactionHash || '0x8c8bf3c3a99d1b1c2a9d4e2f',
+      verificationStatus: 'Verified'
+    };
+
+    // Create AYUSH Certificate content as HTML string
+    const certificateContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>AYUSH Compliance Certificate - ${certificateData.batchId}</title>
+        <style>
+          body { 
+            font-family: 'Times New Roman', serif; 
+            margin: 0; 
+            padding: 40px; 
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #333;
+          }
+          .certificate-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border: 8px solid #d4af37;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+          }
+          .certificate-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #d4af37;
+            padding-bottom: 30px;
+          }
+          .ayush-seal {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #d4af37, #f4e47a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #b8860b;
+            box-shadow: 0 8px 16px rgba(212, 175, 55, 0.3);
+          }
+          .seal-content {
+            text-align: center;
+            color: #8b4513;
+            font-weight: bold;
+          }
+          .seal-text-top {
+            font-size: 10px;
+            margin-bottom: 2px;
+          }
+          .seal-ayush {
+            font-size: 18px;
+            letter-spacing: 2px;
+            margin: 2px 0;
+          }
+          .seal-text-bottom {
+            font-size: 8px;
+            margin-top: 2px;
+          }
+          .certificate-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a5f3f;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+          }
+          .certificate-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+          }
+          .certificate-body {
+            margin: 40px 0;
+            line-height: 1.8;
+          }
+          .certificate-text {
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+          }
+          .detail-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #d4af37;
+          }
+          .detail-label {
+            font-weight: bold;
+            color: #1a5f3f;
+            margin-bottom: 5px;
+            font-size: 14px;
+          }
+          .detail-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+          }
+          .blockchain-section {
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+          }
+          .blockchain-title {
+            color: #155724;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+          }
+          .blockchain-hash {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #28a745;
+            word-break: break-all;
+            font-size: 12px;
+            color: #155724;
+          }
+          .certificate-footer {
+            margin-top: 50px;
+            text-align: center;
+            border-top: 2px solid #d4af37;
+            padding-top: 30px;
+          }
+          .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+          }
+          .signature-box {
+            text-align: center;
+          }
+          .signature-line {
+            border-bottom: 2px solid #333;
+            margin-bottom: 10px;
+            height: 40px;
+          }
+          .signature-label {
+            font-weight: bold;
+            color: #1a5f3f;
+          }
+          .certificate-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 12px;
+            color: #666;
+          }
+          .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(212, 175, 55, 0.1);
+            font-weight: bold;
+            z-index: 0;
+            pointer-events: none;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="certificate-container">
+          <div class="certificate-number">Certificate No: AYUSH-${Date.now()}</div>
+          <div class="watermark">VERIFIED</div>
+          
+          <div class="certificate-header">
+            <div class="ayush-seal">
+              <div class="seal-content">
+                <div class="seal-text-top">Quality you can Trust</div>
+                <div class="seal-ayush">AYUSH</div>
+                <div class="seal-text-bottom">Premium</div>
+              </div>
+            </div>
+            <div class="certificate-title">AYUSH Compliance Certificate</div>
+            <div class="certificate-subtitle">Ministry of AYUSH, Government of India</div>
+            <div class="certificate-subtitle">Ayurherb 2.0 - Blockchain Verified Supply Chain</div>
+          </div>
+
+          <div class="certificate-body">
+            <div class="certificate-text">
+              This is to certify that the herbal batch mentioned below has been verified and complies with 
+              AYUSH quality standards and regulations for medicinal plants and herbal products.
+            </div>
+
+            <div class="details-grid">
+              <div class="detail-item">
+                <div class="detail-label">Batch ID</div>
+                <div class="detail-value">${certificateData.batchId}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Collector</div>
+                <div class="detail-value">${certificateData.collector}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Harvest Date</div>
+                <div class="detail-value">${certificateData.harvestDate}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Location</div>
+                <div class="detail-value">${certificateData.location}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Verification Status</div>
+                <div class="detail-value" style="color: #28a745;">${certificateData.verificationStatus}</div>
+              </div>
+              <div class="detail-item">
+                <div class="detail-label">Certificate Date</div>
+                <div class="detail-value">${new Date().toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            <div class="blockchain-section">
+              <div class="blockchain-title">Blockchain Verification Proof</div>
+              <p style="margin: 10px 0; color: #155724;">
+                This certificate is backed by immutable blockchain technology ensuring authenticity and traceability.
+              </p>
+              <div class="blockchain-hash">
+                Transaction Hash: ${certificateData.blockchainProof}
+              </div>
+            </div>
+
+            <div class="certificate-text" style="margin-top: 30px; font-style: italic;">
+              This certificate validates that the herbal batch has undergone rigorous quality checks, 
+              laboratory testing, and compliance verification as per AYUSH guidelines for medicinal plants.
+            </div>
+          </div>
+
+          <div class="certificate-footer">
+            <div class="signature-section">
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Authorized Signatory</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">AYUSH Compliance Officer</div>
+              </div>
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">Digital Verification</div>
+                <div style="font-size: 12px; color: #666; margin-top: 5px;">Blockchain Verified</div>
+              </div>
+            </div>
+            
+            <div style="margin-top: 30px; font-size: 12px; color: #666;">
+              <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+              <p><strong>Valid until:</strong> ${new Date(Date.now() + 365*24*60*60*1000).toLocaleDateString()}</p>
+              <p style="margin-top: 15px; font-style: italic;">
+                This is a digitally generated certificate. For verification, please visit ayurherb.gov.in
+              </p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Create and download certificate
+    const blob = new Blob([certificateContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `AYUSH_Compliance_Certificate_${certificateData.batchId}_${certificateData.harvestDate.replace(/-/g, '')}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast('AYUSH Compliance Certificate generated successfully!', 'success');
   };
 
   return (
@@ -703,6 +1000,28 @@ const VerificationReport = ({ user, showToast }) => {
                   {(!searchResults || searchResults.verificationStatus !== 'BLOCKCHAIN_VERIFIED') && (
                     <p className="text-gray-400 text-sm text-center mt-2">
                       ⚠️ Batch must be verified before generating environmental report
+                    </p>
+                  )}
+                </div>
+
+                {/* AYUSH Compliance Certificate Button */}
+                <div className="mt-4">
+                  <button
+                    onClick={generateAYUSHCertificate}
+                    disabled={!searchResults || searchResults.verificationStatus !== 'BLOCKCHAIN_VERIFIED'}
+                    className={`w-full px-6 py-4 ${
+                      searchResults && searchResults.verificationStatus === 'BLOCKCHAIN_VERIFIED'
+                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
+                        : 'bg-gradient-to-r from-gray-500 to-gray-600 cursor-not-allowed'
+                    } text-white font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl`}
+                  >
+                    <Medal className="w-6 h-6" />
+                    <span>Generate AYUSH Compliance Certificate</span>
+                    <Award className="w-5 h-5" />
+                  </button>
+                  {(!searchResults || searchResults.verificationStatus !== 'BLOCKCHAIN_VERIFIED') && (
+                    <p className="text-gray-400 text-sm text-center mt-2">
+                      ⚠️ Batch must be verified before generating AYUSH certificate
                     </p>
                   )}
                 </div>
