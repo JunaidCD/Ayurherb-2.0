@@ -157,8 +157,7 @@ const ViewProduct = ({ user, showToast }) => {
 
   const generateQRCodeURL = (data) => {
     // Create formatted text data for QR code
-    const qrText = `
-🌿 AYURHERB PRODUCT DETAILS 🌿
+    const qrText = `🌿 AYURHERB PRODUCT DETAILS 🌿
 
 📦 BATCH INFORMATION:
 Batch ID: ${data.batchInfo.batchId}
@@ -186,11 +185,10 @@ ${data.verification.certification}
 
 Authentic Ayurvedic Product
 Quality Assured
-Blockchain Verified
-    `.trim();
+Blockchain Verified`;
     
     const encodedData = encodeURIComponent(qrText);
-    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodedData}`;
+    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=M&data=${encodedData}`;
   };
 
   const getStatusColor = (status) => {
@@ -616,7 +614,7 @@ Blockchain Verified
                     <img 
                       src={generateQRCodeURL(qrData)} 
                       alt="QR Code for Allovera Details"
-                      className="w-64 h-64 object-contain"
+                      className="w-80 h-80 object-contain"
                     />
                   </div>
                 </div>
